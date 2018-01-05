@@ -36,10 +36,14 @@ object Injector {
   val enumAnnotation = s"$pkg.enum"
   val datatypeAnnotation = s"$pkg.datatype"
   val hiddenAnnotation = s"$pkg.hidden"
+  val sigAnnotation = s"$pkg.sig"
+  val msigAnnotation = s"$pkg.msig"
 
   val sireumPkg = s"_root_.$pkg"
   val enumSig = s"$sireumPkg.EnumSig"
   val datatypeSig = s"$sireumPkg.DatatypeSig"
+  val immutable = s"$sireumPkg.Immutable"
+  val mutable = s"$sireumPkg.Mutable"
   val scalaPkg = "_root.scala"
   val javaPkg = "_root.java"
 
@@ -121,6 +125,8 @@ class Injector extends SyntheticMembersInjector {
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
             case `datatypeAnnotation` => return DatatypeInjector.supers
+            case `sigAnnotation` => return SigInjector.supers
+            case `msigAnnotation` => return SigInjector.msupers
             case _ =>
           }
         }

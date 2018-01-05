@@ -68,21 +68,21 @@ class Injector extends SyntheticMembersInjector {
       case source: ScObject =>
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
-            case `enumAnnotation` => return Seq(enumSig)
+            case `enumAnnotation` => return EnumInjector.supers
             case _ =>
           }
         }
       case source: ScTrait =>
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
-            case `datatypeAnnotation` => return Seq(datatypeSig)
+            case `datatypeAnnotation` => return DatatypeInjector.supers
             case _ =>
           }
         }
       case source: ScClass =>
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
-            case `datatypeAnnotation` => return Seq(datatypeSig)
+            case `datatypeAnnotation` => return DatatypeInjector.supers
             case _ =>
           }
         }
@@ -106,11 +106,19 @@ class Injector extends SyntheticMembersInjector {
       case source: ScTrait =>
       case source: ScClass =>
       case source: ScObject =>
+        for (a <- source.getAnnotations) {
+          a.getQualifiedName match {
+            case `enumAnnotation` =>
+              return EnumInjector.inject(source, EnumInjector.Mode.Inners)
+            case _ =>
+          }
+        }
         source.fakeCompanionClassOrCompanionClass match {
           case c: ScClass =>
             for (a <- c.getAnnotations) {
               a.getQualifiedName match {
-                case `datatypeAnnotation` => return DatatypeInjector.inject(c, DatatypeInjector.Mode.Getter)
+                case `datatypeAnnotation` =>
+                  return DatatypeInjector.inject(c, DatatypeInjector.Mode.Getter)
                 case _ =>
               }
             }
@@ -125,29 +133,55 @@ class Injector extends SyntheticMembersInjector {
       case source: ScTrait =>
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
-            case `datatypeAnnotation` => return DatatypeInjector.inject(source, DatatypeInjector.Mode.Trait)
+            case `datatypeAnnotation` =>
+              return DatatypeInjector.inject(source, DatatypeInjector.Mode.Trait)
             case _ =>
           }
         }
       case source: ScClass =>
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
-            case `datatypeAnnotation` => return DatatypeInjector.inject(source, DatatypeInjector.Mode.Class)
+            case `datatypeAnnotation` =>
+              return DatatypeInjector.inject(source, DatatypeInjector.Mode.Class)
             case _ =>
           }
         }
       case source: ScObject =>
+        for (a <- source.getAnnotations) {
+          a.getQualifiedName match {
+            case `enumAnnotation` =>
+              return EnumInjector.inject(source, EnumInjector.Mode.Functions)
+            case _ =>
+          }
+        }
         source.fakeCompanionClassOrCompanionClass match {
           case c: ScClass =>
             for (a <- c.getAnnotations) {
               a.getQualifiedName match {
-                case `datatypeAnnotation` => return DatatypeInjector.inject(c, DatatypeInjector.Mode.Object)
+                case `datatypeAnnotation` =>
+                  return DatatypeInjector.inject(c, DatatypeInjector.Mode.Object)
                 case _ =>
               }
             }
           case _ =>
         }
       case _ =>
+    }
+    Seq()
+  }
+
+  override def injectMembers(source: ScTypeDefinition): Seq[String] = {
+    source match {
+      case source: ScTrait =>
+      case source: ScClass =>
+      case source: ScObject =>
+        for (a <- source.getAnnotations) {
+          a.getQualifiedName match {
+            case `enumAnnotation` =>
+              return EnumInjector.inject(source, EnumInjector.Mode.Members)
+            case _ =>
+          }
+        }
     }
     Seq()
   }

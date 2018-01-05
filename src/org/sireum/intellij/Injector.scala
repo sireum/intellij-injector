@@ -35,6 +35,13 @@ object Injector {
   val datatypeAnnotation = s"$pkg.datatype"
   val hiddenAnnotation = s"$pkg.hidden"
 
+  val sireumPkg = s"_root_.$pkg"
+  val enumSig = s"$sireumPkg.EnumSig"
+  val datatypeSig = s"$sireumPkg.DatatypeSig"
+  val scalaPkg = "_root.scala"
+  val javaPkg = "_root.java"
+  val sireumString = s"$sireumPkg.String"
+
   object DatatypeMode extends Enumeration {
     type Type = Value
     val Object, Class, Trait, Getter = Value
@@ -50,21 +57,21 @@ class Injector extends SyntheticMembersInjector {
       case source: ScObject =>
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
-            case `enumAnnotation` => return Seq("_root_.org.sireum.EnumSig")
+            case `enumAnnotation` => return Seq(enumSig)
             case _ =>
           }
         }
       case source: ScTrait =>
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
-            case `datatypeAnnotation` => return Seq("_root_.org.sireum.DatatypeSig")
+            case `datatypeAnnotation` => return Seq(datatypeSig)
             case _ =>
           }
         }
       case source: ScClass =>
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
-            case `datatypeAnnotation` => return Seq("_root_.org.sireum.DatatypeSig")
+            case `datatypeAnnotation` => return Seq(datatypeSig)
             case _ =>
           }
         }
@@ -98,6 +105,38 @@ class Injector extends SyntheticMembersInjector {
             }
           case _ =>
         }
+    }
+    Seq()
+  }
+
+  override def injectFunctions(source: ScTypeDefinition): Seq[String] = {
+    source match {
+      case source: ScTrait =>
+        for (a <- source.getAnnotations) {
+          a.getQualifiedName match {
+            case `datatypeAnnotation` => return injectDatatype(source, DatatypeMode.Trait)
+            case _ =>
+          }
+        }
+      case source: ScClass =>
+        for (a <- source.getAnnotations) {
+          a.getQualifiedName match {
+            case `datatypeAnnotation` => return injectDatatype(source, DatatypeMode.Class)
+            case _ =>
+          }
+        }
+      case source: ScObject =>
+        source.fakeCompanionClassOrCompanionClass match {
+          case c: ScClass =>
+            for (a <- c.getAnnotations) {
+              a.getQualifiedName match {
+                case `datatypeAnnotation` => return injectDatatype(c, DatatypeMode.Object)
+                case _ =>
+              }
+            }
+          case _ =>
+        }
+      case _ =>
     }
     Seq()
   }
@@ -137,15 +176,15 @@ class Injector extends SyntheticMembersInjector {
           }
         }
         r :+= (unapplyTypes.size match {
-          case 0 => s"def unapply$typeParams(o: $tpe): _root_.scala.Boolean = ???"
-          case 1 => s"def unapply$typeParams(o: $tpe): _root_.scala.Option[${unapplyTypes.head}] = ???"
-          case _ => s"def unapply$typeParams(o: $tpe): _root_.scala.Option[(${unapplyTypes.mkString(", ")})] = ???"
+          case 0 => s"def unapply$typeParams(o: $tpe): $scalaPkg.Boolean = ???"
+          case 1 => s"def unapply$typeParams(o: $tpe): $scalaPkg.Option[${unapplyTypes.head}] = ???"
+          case _ => s"def unapply$typeParams(o: $tpe): $scalaPkg.Option[(${unapplyTypes.mkString(", ")})] = ???"
         })
       }
 
       case DatatypeMode.Class =>
 
-        r :+= "override def content: _root_.scala.Seq[(_root_.scala.String, _root_.scala.Any)] = ???"
+        r :+= s"override def content: $scalaPkg.Seq[($scalaPkg.String, $scalaPkg.Any)] = ???"
 
       {
         val ps = for (p <- params) yield s"${p.getName}: ${p.getType.getPresentableText} = ${p.getName}"
@@ -156,7 +195,7 @@ class Injector extends SyntheticMembersInjector {
 
       case DatatypeMode.Getter =>
         val getters = for (p <- params) yield s"def ${p.getName}: ${p.getType.getPresentableText} = ???"
-        r :+= s"""class Getter$typeParams(val o: $tpe) extends _root_.scala.AnyVal {
+        r :+= s"""class Getter$typeParams(val o: $tpe) extends $scalaPkg.AnyVal {
                  |  ${getters.mkString("\n  ")}
                  |}""".stripMargin
     }
@@ -166,14 +205,14 @@ class Injector extends SyntheticMembersInjector {
 
         val (hasHash, hasEqual, hasString) = hasHashEqualString(source)
 
-        if (hasHash) r :+= "override def hashCode: _root_.scala.Int = ???"
-        else if (mode == DatatypeMode.Class) r :+= "override def hash: _root_.org.sireum.Z = ???"
+        if (hasHash) r :+= s"override def hashCode: $scalaPkg.Int = ???"
+        else if (mode == DatatypeMode.Class) r :+= s"override def hash: $sireumPkg.Z = ???"
 
-        if (hasEqual || mode == DatatypeMode.Class) r :+= "override def equals(o: _root_.scala.Any): _root_.scala.Boolean = ???"
+        if (hasEqual || mode == DatatypeMode.Class) r :+= s"override def equals(o: $scalaPkg.Any): $scalaPkg.Boolean = ???"
 
-        if (hasString || mode == DatatypeMode.Class) r :+= "override def toString: _root_.java.lang.String = ???"
+        if (hasString || mode == DatatypeMode.Class) r :+= s"override def toString: $javaPkg.String = ???"
 
-        if (!hasString && mode == DatatypeMode.Class) r :+= "override def string: _root_.org.sireum.String = ???"
+        if (!hasString && mode == DatatypeMode.Class) r :+= s"override def string: $sireumString = ???"
 
       case _ =>
     }
@@ -194,37 +233,5 @@ class Injector extends SyntheticMembersInjector {
       }
     }
     (hasHash, hasEqual, hasString)
-  }
-
-  override def injectFunctions(source: ScTypeDefinition): Seq[String] = {
-    source match {
-      case source: ScTrait =>
-        for (a <- source.getAnnotations) {
-          a.getQualifiedName match {
-            case `datatypeAnnotation` => return injectDatatype(source, DatatypeMode.Trait)
-            case _ =>
-          }
-        }
-      case source: ScClass =>
-        for (a <- source.getAnnotations) {
-          a.getQualifiedName match {
-            case `datatypeAnnotation` => return injectDatatype(source, DatatypeMode.Class)
-            case _ =>
-          }
-        }
-      case source: ScObject =>
-        source.fakeCompanionClassOrCompanionClass match {
-          case c: ScClass =>
-            for (a <- c.getAnnotations) {
-              a.getQualifiedName match {
-                case `datatypeAnnotation` => return injectDatatype(c, DatatypeMode.Object)
-                case _ =>
-              }
-            }
-          case _ =>
-        }
-      case _ =>
-    }
-    Seq()
   }
 }

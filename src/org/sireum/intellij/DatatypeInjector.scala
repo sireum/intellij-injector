@@ -36,6 +36,8 @@ object DatatypeInjector {
     val Object, Class, Trait, Getter = Value
   }
 
+  val supers = Seq(datatypeSig)
+
   def inject(source: ScTypeDefinition, mode: Mode.Type): Seq[String] = {
     val name = source.getName
     val params = source.getConstructors.length match {

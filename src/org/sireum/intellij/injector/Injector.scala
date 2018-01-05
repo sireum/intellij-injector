@@ -44,8 +44,8 @@ object Injector {
   val datatypeSig = s"$sireumPkg.DatatypeSig"
   val immutable = s"$sireumPkg.Immutable"
   val mutable = s"$sireumPkg.Mutable"
-  val scalaPkg = "_root.scala"
-  val javaPkg = "_root.java"
+  val scalaPkg = "_root_.scala"
+  val javaPkg = "_root_.java"
 
   val sireumString = s"$sireumPkg.String"
 

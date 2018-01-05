@@ -23,11 +23,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.intellij
+package org.sireum.intellij.injector
 
 import com.intellij.psi.{PsiParameter, PsiTypeParameter}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinition
-import org.sireum.intellij.Injector._
+import org.sireum.intellij.injector.Injector._
 
 object DatatypeInjector {
 

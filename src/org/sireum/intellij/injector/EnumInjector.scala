@@ -23,11 +23,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.sireum.intellij
+package org.sireum.intellij.injector
 
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScLiteral
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScObject
-import org.sireum.intellij.Injector._
+import org.sireum.intellij.injector.Injector._
 
 object EnumInjector {
 

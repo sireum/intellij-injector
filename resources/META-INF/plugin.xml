@@ -48,7 +48,7 @@
   <depends>com.intellij.modules.lang</depends>
 
   <extensions defaultExtensionNs="org.intellij.scala">
-    <syntheticMemberInjector implementation="org.sireum.intellij.Injector"/>
+    <syntheticMemberInjector implementation="org.sireum.intellij.injector.Injector"/>
   </extensions>
 
 </idea-plugin>

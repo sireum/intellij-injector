@@ -25,6 +25,9 @@
 
 package org.sireum.intellij
 
+import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.impl.source.tree.CompositeElement
+import org.jetbrains.plugins.scala.lang.psi.api.toplevel.imports.ScImportStmt
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScObject, ScTrait, ScTypeDefinition}
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.SyntheticMembersInjector
 
@@ -58,12 +61,54 @@ object Injector {
     (hasHash, hasEqual, hasString)
   }
 
+  def isSireum(source: ScTypeDefinition): Boolean = try {
+    val ext = source.getContainingFile.getVirtualFile.getExtension
+    ext match {
+      case "scala" =>
+        val input = source.getContainingFile.getViewProvider.getDocument.getCharsSequence
+        var i = 0
+        val sb = new java.lang.StringBuilder
+        var c = input.charAt(i)
+        while (i < input.length() && c != '\n') {
+          if (!c.isWhitespace) sb.append(c)
+          i = i + 1
+          c = input.charAt(i)
+        }
+        return sb.toString.contains("#Sireum")
+      case "sc" =>
+        val node = source.getContainingFile.getNode
+        val children = node.getChildren(null)
+        var i = 0
+        while (children(i).isInstanceOf[PsiWhiteSpace]) i += 1
+        children(i) match {
+          case e: CompositeElement => e.getPsi match {
+            case stmt: ScImportStmt =>
+              val exprs = stmt.importExprs
+              if (exprs.length != 1) return false
+              if (!exprs.head.isSingleWildcard) return false
+              exprs.head.qualifier.qualName match {
+                case "org.sireum" | "org.sireum.logika" => return true
+                case _ =>
+              }
+            case _ =>
+          }
+          case _ =>
+        }
+      case _ =>
+    }
+    false
+  } catch {
+    case _: Throwable => false
+  }
+
 }
 
 import Injector._
 
 class Injector extends SyntheticMembersInjector {
+
   override def injectSupers(source: ScTypeDefinition): Seq[String] = {
+    if (!isSireum(source)) return Seq()
     source match {
       case source: ScObject =>
         for (a <- source.getAnnotations) {
@@ -92,6 +137,7 @@ class Injector extends SyntheticMembersInjector {
   }
 
   override def needsCompanionObject(source: ScTypeDefinition): Boolean = {
+    if (!isSireum(source)) return false
     for (a <- source.getAnnotations) {
       a.getQualifiedName match {
         case `datatypeAnnotation` => return true
@@ -102,6 +148,7 @@ class Injector extends SyntheticMembersInjector {
   }
 
   override def injectInners(source: ScTypeDefinition): Seq[String] = {
+    if (!isSireum(source)) return Seq()
     source match {
       case source: ScTrait =>
       case source: ScClass =>
@@ -129,6 +176,7 @@ class Injector extends SyntheticMembersInjector {
   }
 
   override def injectFunctions(source: ScTypeDefinition): Seq[String] = {
+    if (!isSireum(source)) return Seq()
     source match {
       case source: ScTrait =>
         for (a <- source.getAnnotations) {
@@ -171,6 +219,7 @@ class Injector extends SyntheticMembersInjector {
   }
 
   override def injectMembers(source: ScTypeDefinition): Seq[String] = {
+    if (!isSireum(source)) return Seq()
     source match {
       case source: ScTrait =>
       case source: ScClass =>

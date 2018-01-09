@@ -35,6 +35,7 @@ object Injector {
   val pkg = "org.sireum"
   val enumAnnotation = s"$pkg.enum"
   val datatypeAnnotation = s"$pkg.datatype"
+  val recordAnnotation = s"$pkg.record"
   val hiddenAnnotation = s"$pkg.hidden"
   val sigAnnotation = s"$pkg.sig"
   val msigAnnotation = s"$pkg.msig"
@@ -42,6 +43,7 @@ object Injector {
   val sireumPkg = s"_root_.$pkg"
   val enumSig = s"$sireumPkg.EnumSig"
   val datatypeSig = s"$sireumPkg.DatatypeSig"
+  val recordSig = s"$sireumPkg.RecordSig"
   val immutable = s"$sireumPkg.Immutable"
   val mutable = s"$sireumPkg.Mutable"
   val scalaPkg = "_root_.scala"
@@ -125,6 +127,7 @@ class Injector extends SyntheticMembersInjector {
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
             case `datatypeAnnotation` => return DatatypeInjector.supers
+            case `recordAnnotation` => return RecordInjector.supers
             case `sigAnnotation` => return SigInjector.supers
             case `msigAnnotation` => return SigInjector.msupers
             case _ =>
@@ -134,6 +137,7 @@ class Injector extends SyntheticMembersInjector {
         for (a <- source.getAnnotations) {
           a.getQualifiedName match {
             case `datatypeAnnotation` => return DatatypeInjector.supers
+            case `recordAnnotation` => return RecordInjector.supers
             case _ =>
           }
         }
@@ -147,6 +151,7 @@ class Injector extends SyntheticMembersInjector {
     for (a <- source.getAnnotations) {
       a.getQualifiedName match {
         case `datatypeAnnotation` => return true
+        case `recordAnnotation` => return true
         case _ =>
       }
     }
@@ -172,6 +177,8 @@ class Injector extends SyntheticMembersInjector {
               a.getQualifiedName match {
                 case `datatypeAnnotation` =>
                   return DatatypeInjector.inject(c, DatatypeInjector.Mode.Getter)
+                case `recordAnnotation` =>
+                  return RecordInjector.inject(c, RecordInjector.Mode.Getter)
                 case _ =>
               }
             }
@@ -189,6 +196,8 @@ class Injector extends SyntheticMembersInjector {
           a.getQualifiedName match {
             case `datatypeAnnotation` =>
               return DatatypeInjector.inject(source, DatatypeInjector.Mode.Trait)
+            case `recordAnnotation` =>
+              return RecordInjector.inject(source, RecordInjector.Mode.Trait)
             case _ =>
           }
         }
@@ -197,6 +206,8 @@ class Injector extends SyntheticMembersInjector {
           a.getQualifiedName match {
             case `datatypeAnnotation` =>
               return DatatypeInjector.inject(source, DatatypeInjector.Mode.Class)
+            case `recordAnnotation` =>
+              return RecordInjector.inject(source, RecordInjector.Mode.Class)
             case _ =>
           }
         }
@@ -214,6 +225,8 @@ class Injector extends SyntheticMembersInjector {
               a.getQualifiedName match {
                 case `datatypeAnnotation` =>
                   return DatatypeInjector.inject(c, DatatypeInjector.Mode.Object)
+                case `recordAnnotation` =>
+                  return RecordInjector.inject(c, RecordInjector.Mode.Object)
                 case _ =>
               }
             }

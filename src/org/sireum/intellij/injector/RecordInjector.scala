@@ -26,7 +26,7 @@
 package org.sireum.intellij.injector
 
 import com.intellij.psi.{PsiParameter, PsiTypeParameter}
-import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{ScClassParameter, ScParameter}
+import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScClassParameter
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinition
 import org.sireum.intellij.injector.Injector._
 

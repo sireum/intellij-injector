@@ -130,6 +130,7 @@ object BitsInjector {
         r :+= s"def apply(n: $sireumPkg.Z): $typeName = ???"
         r :+= s"def apply(n: $sireumString): $sireumPkg.Option[$typeName] = ???"
         r :+= s"def unapply(n: $typeName): $scalaPkg.Option[$sireumPkg.Z] = ???"
+        r :+= s"implicit def to$scTypeName(sc: $scalaPkg.StringContext): $typeName.$scTypeName = ???"
 
       case Mode.Class =>
 
@@ -192,9 +193,9 @@ object BitsInjector {
            """.stripMargin
 
         r :+=
-          s"""implicit class $scTypeName(val sc: StringContext) {
+          s"""class $scTypeName(val sc: $scalaPkg.StringContext) {
              |  object $lowerTermName {
-             |    def apply(args: $scalaPkg.Any): $typeName = ???
+             |    def apply(args: $scalaPkg.Any*): $typeName = ???
              |    def unapply(n: $typeName): $scalaPkg.Boolean = ???
              |  }
              |}

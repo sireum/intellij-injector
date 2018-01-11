@@ -62,7 +62,7 @@ object EnumInjector {
          """.stripMargin
 
         for (b <- source.extendsBlock.templateBody;
-             e <- b.exprs) {
+             e <- b.getChildren) {
           e match {
             case e: ScLiteral if e.isSymbol =>
               val name = e.getValue.toString.substring(1)

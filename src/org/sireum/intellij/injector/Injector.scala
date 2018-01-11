@@ -25,9 +25,8 @@
 
 package org.sireum.intellij.injector
 
-import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.{PsiType, PsiWhiteSpace}
 import com.intellij.psi.impl.source.tree.CompositeElement
-import org.jetbrains.plugins.scala.lang.psi.api.base.{ScInterpolatedStringLiteral, ScLiteral}
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScExpression
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.imports.ScImportStmt
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScObject, ScTrait, ScTypeDefinition}
@@ -67,27 +66,28 @@ object Injector {
   }
 
   def extractInt(e: ScExpression): Option[BigInt] = {
-    e match {
-      case e: ScInterpolatedStringLiteral =>
-        val text = e.getText
-        if (text.startsWith("z\"\"\"") && text.endsWith("\"\"\"")) {
-          Try(BigInt(normNum(text.substring(4, text.length - 3)))) match {
-            case Success(n) => return Some(n)
-            case _ =>
-          }
-
-        } else if (text.startsWith("z\"") && text.endsWith("\"")) {
-          Try(BigInt(normNum(text.substring(2, text.length - 1)))) match {
-            case Success(n) => return Some(n)
-            case _ =>
-          }
-        }
-      case e: ScLiteral => e.getValue match {
-        case v: java.lang.Integer => return Some(v.intValue)
-        case v: java.lang.Long => return Some(v.longValue)
-        case _ => return None
+    val text = e.getText
+    if (text.startsWith("z\"\"\"") && text.endsWith("\"\"\"")) {
+      Try(BigInt(normNum(text.substring(4, text.length - 3)))) match {
+        case Success(n) => return Some(n)
+        case _ =>
       }
-      case _ =>
+
+    } else if (text.startsWith("z\"") && text.endsWith("\"")) {
+      Try(BigInt(normNum(text.substring(2, text.length - 1)))) match {
+        case Success(n) => return Some(n)
+        case _ =>
+      }
+    } else if (text.last.toUpper == 'L') {
+      Try(BigInt(text.substring(0, text.length - 1))) match {
+        case Success(n) => return Some(n)
+        case _ =>
+      }
+    } else {
+      Try(BigInt(text)) match {
+        case Success(n) => return Some(n)
+        case _ =>
+      }
     }
     None
   }
@@ -165,6 +165,11 @@ object Injector {
     false
   } catch {
     case _: Throwable => false
+  }
+
+  implicit class TypeString(val t: PsiType) extends AnyVal {
+    def getText: String =
+      t.getCanonicalText.replaceAllLiterally("<", "[").replaceAllLiterally(">", "]")
   }
 
 }

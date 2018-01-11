@@ -134,8 +134,8 @@ object BitsInjector {
 
       case Mode.Class =>
 
-        r :+= s"def value: $valueTypeName = ???"
-        r :+= s"def make(v: $valueTypeName): $typeName = ???"
+        r :+= s"override def value: $valueTypeName = ???"
+        r :+= s"override def make(v: $valueTypeName): $typeName = ???"
         r :+= s"override def Name: $javaPkg.lang.String = ???"
         r :+= s"override def BitWidth: $scalaPkg.Int = ???"
         r :+= s"override def Min: $typeName = ???"

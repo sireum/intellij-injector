@@ -53,24 +53,25 @@ object RecordInjector {
       case _ => Array[PsiTypeParameter]()
     }
     val targs = for (tp <- tparams) yield tp.getName
-    val tpe = if (targs.nonEmpty) s"$name[${targs.mkString(", ")}]" else name
+    val typeArgs = if (targs.nonEmpty) s"[${targs.mkString(", ")}]" else ""
+    val tpe = if (targs.nonEmpty) s"$name$typeArgs" else name
     val typeParams = if (targs.nonEmpty) s"[${tparams.map(_.getText).mkString(", ")}]" else ""
     var r = Vector[String]()
     mode match {
       case Mode.Object =>
         val ps = for (p <- params) yield {
-          s"${p.getName}: ${p.getType.getPresentableText}"
+          s"${p.getName}: ${p.getType.getText}"
         }
 
         r :+= s"def apply$typeParams(${ps.mkString(", ")}): $tpe = ???"
 
-        r :+= s"implicit def toGetter$typeParams(o: $tpe): $name.Getter = ???"
+        r :+= s"implicit def toGetter$typeParams(o: $tpe): $name.Getter$typeArgs = ???"
 
       {
         var unapplyTypes = Vector[String]()
         for (p <- params) {
           if (!p.getAnnotations.exists(a => hiddenAnnotation == a.getQualifiedName)) {
-            unapplyTypes :+= p.getType.getPresentableText
+            unapplyTypes :+= p.getType.getText
           }
         }
         r :+= (unapplyTypes.size match {
@@ -87,7 +88,7 @@ object RecordInjector {
         r :+= s"override def content: $scalaPkg.Seq[($scalaPkg.String, $scalaPkg.Any)] = ???"
 
       {
-        val ps = for (p <- params) yield s"${p.getName}: ${p.getType.getPresentableText} = ${p.getName}"
+        val ps = for (p <- params) yield s"${p.getName}: ${p.getType.getText} = ${p.getName}"
         r :+= s"def apply(${ps.mkString(", ")}): $tpe = ???"
       }
 
@@ -98,7 +99,7 @@ object RecordInjector {
           for (p <- params if (p match {
             case p: ScClassParameter => !p.isVar
             case _ => true
-          })) yield s"def ${p.getName}: ${p.getType.getPresentableText} = ???"
+          })) yield s"def ${p.getName}: ${p.getType.getText} = ???"
         r :+=
           s"""class Getter$typeParams(val o: $tpe) extends $scalaPkg.AnyVal {
              |  ${getters.mkString("\n  ")}

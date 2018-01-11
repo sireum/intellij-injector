@@ -122,8 +122,8 @@ object RangeInjector {
 
       case Mode.Class =>
 
-        r :+= s"def value: $sireumPkg.Z.MP = ???"
-        r :+= s"def make(v: $sireumPkg.Z.MP): $typeName = ???"
+        r :+= s"override def value: $sireumPkg.Z.MP = ???"
+        r :+= s"override def make(v: $sireumPkg.Z.MP): $typeName = ???"
         r :+= s"override def Name: $javaPkg.lang.String = ???"
         r :+= s"override def Min: $typeName = ???"
         r :+= s"override def Max: $typeName = ???"

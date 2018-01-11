@@ -59,7 +59,7 @@ object DatatypeInjector {
     mode match {
       case Mode.Object =>
         val ps = for (p <- params) yield {
-          s"${p.getName}: ${p.getType.getText}"
+          s"${p.getName}: ${p.getTypeText}"
         }
 
         r :+= s"def apply$typeParams(${ps.mkString(", ")}): $tpe = ???"
@@ -70,7 +70,7 @@ object DatatypeInjector {
         var unapplyTypes = Vector[String]()
         for (p <- params) {
           if (!p.getAnnotations.exists(a => hiddenAnnotation == a.getQualifiedName)) {
-            unapplyTypes :+= p.getType.getText
+            unapplyTypes :+= p.getTypeText
           }
         }
         r :+= (unapplyTypes.size match {
@@ -85,14 +85,14 @@ object DatatypeInjector {
         r :+= s"override def content: $scalaPkg.Seq[($scalaPkg.String, $scalaPkg.Any)] = ???"
 
       {
-        val ps = for (p <- params) yield s"${p.getName}: ${p.getType.getText} = ${p.getName}"
+        val ps = for (p <- params) yield s"${p.getName}: ${p.getTypeText} = ${p.getName}"
         r :+= s"def apply(${ps.mkString(", ")}): $tpe = ???"
       }
 
       case Mode.Trait =>
 
       case Mode.Getter =>
-        val getters = for (p <- params) yield s"def ${p.getName}: ${p.getType.getText} = ???"
+        val getters = for (p <- params) yield s"def ${p.getName}: ${p.getTypeText} = ???"
         r :+= s"""class Getter$typeParams(val o: $tpe) extends $scalaPkg.AnyVal {
                  |  ${getters.mkString("\n  ")}
                  |}""".stripMargin

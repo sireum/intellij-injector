@@ -25,7 +25,7 @@
 
 package org.sireum.intellij.injector
 
-import com.intellij.psi.{PsiType, PsiWhiteSpace}
+import com.intellij.psi.{PsiParameter, PsiType, PsiWhiteSpace}
 import com.intellij.psi.impl.source.tree.CompositeElement
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScExpression
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.imports.ScImportStmt
@@ -167,11 +167,20 @@ object Injector {
     case _: Throwable => false
   }
 
-  implicit class TypeString(val t: PsiType) extends AnyVal {
-    def getText: String =
-      t.getCanonicalText.replaceAllLiterally("<", "[").replaceAllLiterally(">", "]")
+  implicit class PsiParameterType(val p: PsiParameter) extends AnyVal {
+    def getTypeText: String = {
+      val te = p.getTypeElement
+      te.getText match {
+        case "boolean" => "_root_.org.sireum.B"
+        case "char" => "_root_.org.sireum.C"
+        case "float" => "_root_.org.sireum.F32"
+        case "double" => "_root_.org.sireum.F64"
+        case "java.lang.String" => "_root_.org.sireum.String"
+        case "spire.math.Real" => "_root_.org.sireum.R"
+        case s => s.replaceAllLiterally("<", "[").replaceAllLiterally(">", "]")
+      }
+    }
   }
-
 }
 
 import Injector._

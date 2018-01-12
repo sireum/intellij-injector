@@ -25,9 +25,11 @@
 
 package org.sireum.intellij.injector
 
-import com.intellij.psi.{PsiParameter, PsiType, PsiWhiteSpace}
+import com.intellij.psi.{PsiAnnotation, PsiElement, PsiWhiteSpace}
 import com.intellij.psi.impl.source.tree.CompositeElement
+import org.jetbrains.plugins.scala.lang.psi.api.base.ScPrimaryConstructor
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScExpression
+import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{ScClassParameter, ScParameterType}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.imports.ScImportStmt
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScObject, ScTrait, ScTypeDefinition}
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.SyntheticMembersInjector
@@ -35,6 +37,12 @@ import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.SyntheticMembe
 import scala.util.{Success, Try}
 
 object Injector {
+  final case class Parameter(name: String,
+                             tpe: String,
+                             annotations: Seq[PsiAnnotation],
+                             isVar: Boolean,
+                             isVal: Boolean)
+
   val pkg = "org.sireum"
   val enumAnnotation = s"$pkg.enum"
   val datatypeAnnotation = s"$pkg.datatype"
@@ -167,17 +175,40 @@ object Injector {
     case _: Throwable => false
   }
 
-  implicit class PsiParameterType(val p: PsiParameter) extends AnyVal {
-    def getTypeText: String = {
-      val te = p.getTypeElement
-      te.getText match {
-        case "boolean" => "_root_.org.sireum.B"
-        case "char" => "_root_.org.sireum.C"
-        case "float" => "_root_.org.sireum.F32"
-        case "double" => "_root_.org.sireum.F64"
-        case "java.lang.String" => "_root_.org.sireum.String"
-        case "spire.math.Real" => "_root_.org.sireum.R"
-        case s => s.replaceAllLiterally("<", "[").replaceAllLiterally(">", "]")
+  implicit class ScClassParameters(val t: ScTypeDefinition) extends AnyVal {
+    def parameters: Seq[Parameter] = {
+      def findClassPrimaryConstructor(e: PsiElement): Option[ScPrimaryConstructor] = {
+        e match {
+          case e: ScPrimaryConstructor => return Some(e)
+          case _ =>
+            for (c <- e.getChildren) {
+              findClassPrimaryConstructor(c) match {
+                case r@Some(_) => return r
+                case _ =>
+              }
+            }
+        }
+        None
+      }
+      def findClassParameter(e: PsiElement): Seq[ScClassParameter] = {
+        e match {
+          case e: ScClassParameter => Vector(e)
+          case _ => e.getChildren.flatMap(findClassParameter)
+        }
+      }
+      def findType(p: ScClassParameter): String = {
+        for (c <- p.getChildren) c match {
+          case c: ScParameterType => return c.getText
+          case _ =>
+        }
+        "scala.Any"
+      }
+
+      findClassPrimaryConstructor(t) match {
+        case Some(c) =>
+          for (p <- findClassParameter(c))
+            yield Parameter(p.getName, findType(p), p.getAnnotations, p.isVar, p.isVal)
+        case _ => Seq()
       }
     }
   }

@@ -25,8 +25,7 @@
 
 package org.sireum.intellij.injector
 
-import com.intellij.psi.{PsiParameter, PsiTypeParameter}
-import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScClassParameter
+import com.intellij.psi.PsiTypeParameter
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinition
 import org.sireum.intellij.injector.Injector._
 
@@ -41,13 +40,7 @@ object RecordInjector {
 
   def inject(source: ScTypeDefinition, mode: Mode.Type): Seq[String] = {
     val name = source.getName
-    val params = source.getConstructors.length match {
-      case 0 => Array[PsiParameter]()
-      case 1 =>
-        val c = source.getConstructors.head
-        c.getParameterList.getParameters
-      case _ => return Seq()
-    }
+    val params = source.parameters
     val tparams = Option(source.getTypeParameterList) match {
       case Some(tpl) => tpl.getTypeParameters
       case _ => Array[PsiTypeParameter]()
@@ -57,11 +50,12 @@ object RecordInjector {
     val tpe = if (targs.nonEmpty) s"$name$typeArgs" else name
     val typeParams = if (targs.nonEmpty) s"[${tparams.map(_.getText).mkString(", ")}]" else ""
     var r = Vector[String]()
+
     mode match {
+
       case Mode.Object =>
-        val ps = for (p <- params) yield {
-          s"${p.getName}: ${p.getTypeText}"
-        }
+
+        val ps = for (p <- params) yield s"${p.name}: ${p.tpe}"
 
         r :+= s"def apply$typeParams(${ps.mkString(", ")}): $tpe = ???"
 
@@ -70,8 +64,8 @@ object RecordInjector {
       {
         var unapplyTypes = Vector[String]()
         for (p <- params) {
-          if (!p.getAnnotations.exists(a => hiddenAnnotation == a.getQualifiedName)) {
-            unapplyTypes :+= p.getTypeText
+          if (!p.annotations.exists(a => hiddenAnnotation == a.getQualifiedName)) {
+            unapplyTypes :+= p.tpe
           }
         }
         r :+= (unapplyTypes.size match {
@@ -88,18 +82,15 @@ object RecordInjector {
         r :+= s"override def content: $scalaPkg.Seq[($scalaPkg.String, $scalaPkg.Any)] = ???"
 
       {
-        val ps = for (p <- params) yield s"${p.getName}: ${p.getTypeText} = ${p.getName}"
+        val ps = for (p <- params) yield s"${p.name}: ${p.tpe} = ${p.name}"
         r :+= s"def apply(${ps.mkString(", ")}): $tpe = ???"
       }
 
       case Mode.Trait =>
 
       case Mode.Getter =>
-        val getters =
-          for (p <- params if (p match {
-            case p: ScClassParameter => !p.isVar
-            case _ => true
-          })) yield s"def ${p.getName}: ${p.getTypeText} = ???"
+
+        val getters = for (p <- params if !p.isVar && !p.isVal) yield s"def ${p.name}: ${p.tpe} = ???"
         r :+=
           s"""class Getter$typeParams(val o: $tpe) extends $scalaPkg.AnyVal {
              |  ${getters.mkString("\n  ")}

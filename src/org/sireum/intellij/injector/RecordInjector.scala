@@ -64,7 +64,7 @@ object RecordInjector {
       {
         var unapplyTypes = Vector[String]()
         for (p <- params) {
-          if (!p.annotations.exists(a => hiddenAnnotation == a.getQualifiedName)) {
+          if (!p.annotations.exists(a => "hidden" == getAnnotationName(a))) {
             unapplyTypes :+= p.tpe
           }
         }

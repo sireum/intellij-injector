@@ -37,6 +37,7 @@ import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.SyntheticMembe
 import scala.util.{Success, Try}
 
 object Injector {
+
   final case class Parameter(name: String,
                              tpe: String,
                              annotations: Seq[PsiAnnotation],
@@ -44,14 +45,6 @@ object Injector {
                              isVal: Boolean)
 
   val pkg = "org.sireum"
-  val enumAnnotation = s"$pkg.enum"
-  val datatypeAnnotation = s"$pkg.datatype"
-  val recordAnnotation = s"$pkg.record"
-  val hiddenAnnotation = s"$pkg.hidden"
-  val sigAnnotation = s"$pkg.sig"
-  val msigAnnotation = s"$pkg.msig"
-  val bitsAnnotation = s"$pkg.bits"
-  val rangeAnnotation = s"$pkg.range"
 
   val sireumPkg = s"_root_.$pkg"
   val enumSig = s"$sireumPkg.EnumSig"
@@ -190,13 +183,33 @@ object Injector {
         }
         None
       }
+
       def findClassParameter(e: PsiElement): Seq[ScClassParameter] = {
         e match {
           case e: ScClassParameter => Vector(e)
           case _ => e.getChildren.flatMap(findClassParameter)
         }
       }
+
       def findType(p: ScClassParameter): String = {
+        p.getType.getCanonicalText match {
+          case "java.lang.Object" =>
+          case typeText =>
+            val st = new java.util.StringTokenizer(typeText, "<>, \t\r\n", true)
+            val sb = new java.lang.StringBuilder
+            while (st.hasMoreTokens) sb.append(st.nextToken match {
+              case "boolean" => "_root_.org.sireum.B"
+              case "char" => "_root_.org.sireum.C"
+              case "float" => "_root_.org.sireum.F32"
+              case "double" => "_root_.org.sireum.F64"
+              case "java.lang.String" => "_root_.org.sireum.String"
+              case "spire.math.Real" => "_root_.org.sireum.R"
+              case "<" => "["
+              case ">" => "]"
+              case s => s.trim
+            })
+            return sb.toString
+        }
         for (c <- p.getChildren) c match {
           case c: ScParameterType => return c.getText
           case _ =>
@@ -212,6 +225,14 @@ object Injector {
       }
     }
   }
+
+  def getAnnotationName(a: PsiAnnotation): String = {
+    var s = a.getText
+    val i = s.indexOf('(')
+    s = if (i >= 0) s.substring(1, i) else s.substring(1)
+    s.trim
+  }
+
 }
 
 import Injector._
@@ -223,18 +244,18 @@ class Injector extends SyntheticMembersInjector {
     source match {
       case source: ScObject =>
         for (a <- source.getAnnotations) {
-          a.getQualifiedName match {
-            case `enumAnnotation` => return EnumInjector.supers
+          getAnnotationName(a) match {
+            case "enum" => return EnumInjector.supers
             case _ =>
           }
         }
         source.fakeCompanionClassOrCompanionClass match {
           case c: ScClass =>
             for (a <- c.getAnnotations) {
-              a.getQualifiedName match {
-                case `rangeAnnotation` =>
+              getAnnotationName(a) match {
+                case "range" =>
                   return RangeInjector.objectSupers(c)
-                case `bitsAnnotation` =>
+                case "bits" =>
                   return BitsInjector.objectSupers(c)
                 case _ =>
               }
@@ -243,21 +264,21 @@ class Injector extends SyntheticMembersInjector {
         }
       case source: ScTrait =>
         for (a <- source.getAnnotations) {
-          a.getQualifiedName match {
-            case `datatypeAnnotation` => return DatatypeInjector.supers
-            case `recordAnnotation` => return RecordInjector.supers
-            case `sigAnnotation` => return SigInjector.supers
-            case `msigAnnotation` => return SigInjector.msupers
+          getAnnotationName(a) match {
+            case "datatype" => return DatatypeInjector.supers
+            case "record" => return RecordInjector.supers
+            case "sig" => return SigInjector.supers
+            case "msig" => return SigInjector.msupers
             case _ =>
           }
         }
       case source: ScClass =>
         for (a <- source.getAnnotations) {
-          a.getQualifiedName match {
-            case `datatypeAnnotation` => return DatatypeInjector.supers
-            case `recordAnnotation` => return RecordInjector.supers
-            case `rangeAnnotation` => return RangeInjector.supers(source)
-            case `bitsAnnotation` => return BitsInjector.inject(source, a, BitsInjector.Mode.Supers)
+          getAnnotationName(a) match {
+            case "datatype" => return DatatypeInjector.supers
+            case "record" => return RecordInjector.supers
+            case "range" => return RangeInjector.supers(source)
+            case "bits" => return BitsInjector.inject(source, a, BitsInjector.Mode.Supers)
             case _ =>
           }
         }
@@ -269,11 +290,11 @@ class Injector extends SyntheticMembersInjector {
   override def needsCompanionObject(source: ScTypeDefinition): Boolean = {
     if (!isSireum(source)) return false
     for (a <- source.getAnnotations) {
-      a.getQualifiedName match {
-        case `datatypeAnnotation` => return true
-        case `recordAnnotation` => return true
-        case `rangeAnnotation` => return true
-        case `bitsAnnotation` => return true
+      getAnnotationName(a) match {
+        case "datatype" => return true
+        case "record" => return true
+        case "range" => return true
+        case "bits" => return true
         case _ =>
       }
     }
@@ -285,8 +306,8 @@ class Injector extends SyntheticMembersInjector {
     source match {
       case source: ScObject =>
         for (a <- source.getAnnotations) {
-          a.getQualifiedName match {
-            case `enumAnnotation` =>
+          getAnnotationName(a) match {
+            case "enum" =>
               return EnumInjector.inject(source, EnumInjector.Mode.Inners)
             case _ =>
           }
@@ -294,14 +315,14 @@ class Injector extends SyntheticMembersInjector {
         source.fakeCompanionClassOrCompanionClass match {
           case c: ScClass =>
             for (a <- c.getAnnotations) {
-              a.getQualifiedName match {
-                case `datatypeAnnotation` =>
+              getAnnotationName(a) match {
+                case "datatype" =>
                   return DatatypeInjector.inject(c, DatatypeInjector.Mode.Getter)
-                case `recordAnnotation` =>
+                case "record" =>
                   return RecordInjector.inject(c, RecordInjector.Mode.Getter)
-                case `rangeAnnotation` =>
+                case "range" =>
                   return RangeInjector.inject(c, a, RangeInjector.Mode.ObjectInners)
-                case `bitsAnnotation` =>
+                case "bits" =>
                   return BitsInjector.inject(c, a, BitsInjector.Mode.ObjectInners)
                 case _ =>
               }
@@ -318,32 +339,32 @@ class Injector extends SyntheticMembersInjector {
     source match {
       case source: ScTrait =>
         for (a <- source.getAnnotations) {
-          a.getQualifiedName match {
-            case `datatypeAnnotation` =>
+          getAnnotationName(a) match {
+            case "datatype" =>
               return DatatypeInjector.inject(source, DatatypeInjector.Mode.Trait)
-            case `recordAnnotation` =>
+            case "record" =>
               return RecordInjector.inject(source, RecordInjector.Mode.Trait)
             case _ =>
           }
         }
       case source: ScClass =>
         for (a <- source.getAnnotations) {
-          a.getQualifiedName match {
-            case `datatypeAnnotation` =>
+          getAnnotationName(a) match {
+            case "datatype" =>
               return DatatypeInjector.inject(source, DatatypeInjector.Mode.Class)
-            case `recordAnnotation` =>
+            case "record" =>
               return RecordInjector.inject(source, RecordInjector.Mode.Class)
-            case `rangeAnnotation` =>
+            case "range" =>
               return RangeInjector.inject(source, a, RangeInjector.Mode.Class)
-            case `bitsAnnotation` =>
+            case "bits" =>
               return BitsInjector.inject(source, a, BitsInjector.Mode.Class)
             case _ =>
           }
         }
       case source: ScObject =>
         for (a <- source.getAnnotations) {
-          a.getQualifiedName match {
-            case `enumAnnotation` =>
+          getAnnotationName(a) match {
+            case "enum" =>
               return EnumInjector.inject(source, EnumInjector.Mode.Functions)
             case _ =>
           }
@@ -351,14 +372,14 @@ class Injector extends SyntheticMembersInjector {
         source.fakeCompanionClassOrCompanionClass match {
           case c: ScClass =>
             for (a <- c.getAnnotations) {
-              a.getQualifiedName match {
-                case `datatypeAnnotation` =>
+              getAnnotationName(a) match {
+                case "datatype" =>
                   return DatatypeInjector.inject(c, DatatypeInjector.Mode.Object)
-                case `recordAnnotation` =>
+                case "record" =>
                   return RecordInjector.inject(c, RecordInjector.Mode.Object)
-                case `rangeAnnotation` =>
+                case "range" =>
                   return RangeInjector.inject(c, a, RangeInjector.Mode.Object)
-                case `bitsAnnotation` =>
+                case "bits" =>
                   return BitsInjector.inject(c, a, BitsInjector.Mode.Object)
                 case _ =>
               }
@@ -375,8 +396,8 @@ class Injector extends SyntheticMembersInjector {
     source match {
       case source: ScObject =>
         for (a <- source.getAnnotations) {
-          a.getQualifiedName match {
-            case `enumAnnotation` =>
+          getAnnotationName(a) match {
+            case "enum" =>
               return EnumInjector.inject(source, EnumInjector.Mode.Members)
             case _ =>
           }
@@ -384,10 +405,10 @@ class Injector extends SyntheticMembersInjector {
         source.fakeCompanionClassOrCompanionClass match {
           case c: ScClass =>
             for (a <- c.getAnnotations) {
-              a.getQualifiedName match {
-                case `rangeAnnotation` =>
+              getAnnotationName(a) match {
+                case "range" =>
                   return RangeInjector.inject(c, a, RangeInjector.Mode.ObjectMembers)
-                case `bitsAnnotation` =>
+                case "bits" =>
                   return BitsInjector.inject(c, a, BitsInjector.Mode.ObjectMembers)
                 case _ =>
               }

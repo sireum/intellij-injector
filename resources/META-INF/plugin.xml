@@ -26,7 +26,7 @@
 <idea-plugin>
   <id>org.sireum.intellij.injector</id>
   <name>Sireum v3 Injector</name>
-  <version>3.2</version>
+  <version>3.2.1-SNAPSHOT</version>
   <vendor email="robby@santoslab.org" url="http://robby.santoslab.org">Robby, SAnToS Lab, Kansas State University
   </vendor>
 

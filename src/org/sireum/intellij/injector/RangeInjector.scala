@@ -114,7 +114,6 @@ object RangeInjector {
         r :+= s"def randomSeed(seed: $sireumPkg.Z): $typeName = ???"
         r :+= s"def apply(n: $scalaPkg.Int): $typeName = ???"
         r :+= s"def apply(n: $scalaPkg.Long): $typeName = ???"
-        r :+= s"def apply(n: $sireumPkg.Z.MP): $typeName = ???"
         r :+= s"def apply(n: $sireumPkg.Z): $typeName = ???"
         r :+= s"def apply(n: $sireumString): $sireumPkg.Option[$typeName] = ???"
         r :+= s"def unapply(n: $typeName): $scalaPkg.Option[$sireumPkg.Z] = ???"
@@ -122,8 +121,8 @@ object RangeInjector {
 
       case Mode.Class =>
 
-        r :+= s"override def value: $sireumPkg.Z.MP = ???"
-        r :+= s"override def make(v: $sireumPkg.Z.MP): $typeName = ???"
+        r :+= s"override def value: $sireumPkg.Z = ???"
+        r :+= s"override def make(v: $sireumPkg.Z): $typeName = ???"
         r :+= s"override def Name: $javaPkg.lang.String = ???"
         r :+= s"override def Min: $typeName = ???"
         r :+= s"override def Max: $typeName = ???"

@@ -180,15 +180,15 @@ object BitsInjector {
 
         r :+=
           s"""object $isTypeName {
-             |  def apply[V <: $sireumPkg.Immutable](args: V*): $isTypeName[V] = $sireumPkg.IS[$typeName, V](args: _*)
-             |  def create[V <: $sireumPkg.Immutable](size: $sireumPkg.Z, default: V): $isTypeName[V] = $sireumPkg.IS.create[$typeName, V](size, default)
+             |  def apply[V <: $sireumPkg.Immutable](args: V*): $typeName.$isTypeName[V] = $sireumPkg.IS[$typeName, V](args: _*)
+             |  def create[V <: $sireumPkg.Immutable](size: $sireumPkg.Z, default: V): $typeName.$isTypeName[V] = $sireumPkg.IS.create[$typeName, V](size, default)
              |}
            """.stripMargin
 
         r :+=
           s"""object $msTypeName {
-             |  def apply[V](args: V*): $isTypeName[V] = $sireumPkg.MS[$typeName, V](args: _*)
-             |  def create[V](size: $sireumPkg.Z, default: V): $isTypeName[V] = $sireumPkg.MS.create[$typeName, V](size, default)
+             |  def apply[V](args: V*): $typeName.$msTypeName[V] = $sireumPkg.MS[$typeName, V](args: _*)
+             |  def create[V](size: $sireumPkg.Z, default: V): $typeName.$msTypeName[V] = $sireumPkg.MS.create[$typeName, V](size, default)
              |}
            """.stripMargin
 

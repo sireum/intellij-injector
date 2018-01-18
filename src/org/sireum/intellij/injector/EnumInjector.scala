@@ -42,13 +42,16 @@ object EnumInjector {
 
     var r = Vector[String]()
 
+    var name = source.getName
+    if (name.endsWith("$")) name = name.substring(0, name.length - 1)
+
     mode match {
 
       case Mode.Functions =>
 
-        r :+= s"final def byName(name: $sireumString): $sireumPkg.Option[Type] = ???"
+        r :+= s"final def byName(name: $sireumString): $sireumPkg.Option[$name.Type] = ???"
 
-        r :+= s"final def byOrdinal(ordinal: $sireumPkg.Z): $sireumPkg.Option[Type] = ???"
+        r :+= s"final def byOrdinal(ordinal: $sireumPkg.Z): $sireumPkg.Option[$name.Type] = ???"
 
       case Mode.Inners =>
         r :+=

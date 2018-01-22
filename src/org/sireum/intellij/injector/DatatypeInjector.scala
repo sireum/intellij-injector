@@ -79,6 +79,11 @@ object DatatypeInjector {
 
         r :+= s"override def content: $scalaPkg.Seq[($scalaPkg.String, $scalaPkg.Any)] = ???"
 
+        r ++= (for (p <- params) yield {
+          val gName = p.name.head.toUpper + p.name.substring(1)
+          s"def get$gName: ${p.tpe} = ???"
+        })
+
       {
         val ps = for (p <- params) yield s"${p.name}: ${p.tpe} = ${p.name}"
         r :+= s"def apply(${ps.mkString(", ")}): $tpe = ???"
@@ -89,9 +94,10 @@ object DatatypeInjector {
       case Mode.Getter =>
 
         val getters = for (p <- params if !p.isVal) yield s"def ${p.name}: ${p.tpe} = ???"
-        r :+= s"""class Getter$typeParams(val o: $tpe) extends $scalaPkg.AnyVal {
-                 |  ${getters.mkString("\n  ")}
-                 |}""".stripMargin
+        r :+=
+          s"""class Getter$typeParams(val o: $tpe) extends $scalaPkg.AnyVal {
+             |  ${getters.mkString("\n  ")}
+             |}""".stripMargin
     }
 
     mode match {

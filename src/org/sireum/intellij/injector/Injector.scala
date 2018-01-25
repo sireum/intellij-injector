@@ -58,6 +58,8 @@ object Injector {
   val sireumString = s"$sireumPkg.String"
   val emptyResult: Seq[String] = Seq()
 
+  var pureSlangMode = true
+
   def extractBoolean(expression: ScExpression): Option[Boolean] = {
     expression.getText match {
       case "T" | "true" => Some(true)

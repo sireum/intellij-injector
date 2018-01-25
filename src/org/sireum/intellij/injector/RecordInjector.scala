@@ -77,19 +77,21 @@ object RecordInjector {
 
       case Mode.Class =>
 
-        r ++= (for (p <- params) yield {
-          val gName = p.name.head.toUpper + p.name.substring(1)
-          s"def get$gName: ${p.tpe} = ???"
-        })
+        if (!pureSlangMode) {
+          r ++= (for (p <- params) yield {
+            val gName = p.name.head.toUpper + p.name.substring(1)
+            s"def get$gName: ${p.tpe} = ???"
+          })
 
-        r ++= (for (p <- params if p.isVar) yield {
-          val sName = p.name.head.toUpper + p.name.substring(1)
-          s"def set$sName(${p.name}: ${p.tpe}): this.type = ???"
-        })
+          r ++= (for (p <- params if p.isVar) yield {
+            val sName = p.name.head.toUpper + p.name.substring(1)
+            s"def set$sName(${p.name}: ${p.tpe}): this.type = ???"
+          })
+        }
 
         r :+= s"override def $$clone: $tpe = ???"
 
-        r :+= s"override def content: $scalaPkg.Seq[($scalaPkg.String, $scalaPkg.Any)] = ???"
+        r :+= s"override def $$content: $scalaPkg.Seq[($scalaPkg.String, $scalaPkg.Any)] = ???"
 
       {
         val ps = for (p <- params) yield s"${p.name}: ${p.tpe} = ${p.name}"

@@ -77,12 +77,14 @@ object DatatypeInjector {
 
       case Mode.Class =>
 
-        r :+= s"override def content: $scalaPkg.Seq[($scalaPkg.String, $scalaPkg.Any)] = ???"
+        r :+= s"override def $$content: $scalaPkg.Seq[($scalaPkg.String, $scalaPkg.Any)] = ???"
 
-        r ++= (for (p <- params) yield {
-          val gName = p.name.head.toUpper + p.name.substring(1)
-          s"def get$gName: ${p.tpe} = ???"
-        })
+        if (!pureSlangMode) {
+          r ++= (for (p <- params) yield {
+            val gName = p.name.head.toUpper + p.name.substring(1)
+            s"def get$gName: ${p.tpe} = ???"
+          })
+        }
 
       {
         val ps = for (p <- params) yield s"${p.name}: ${p.tpe} = ${p.name}"

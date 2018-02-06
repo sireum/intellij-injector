@@ -29,9 +29,17 @@ import com.intellij.psi.{PsiAnnotation, PsiElement, PsiWhiteSpace}
 import com.intellij.psi.impl.source.tree.CompositeElement
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScPrimaryConstructor
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScExpression
-import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{ScClassParameter, ScParameterType}
+import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{
+  ScClassParameter,
+  ScParameterType
+}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.imports.ScImportStmt
-import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScObject, ScTrait, ScTypeDefinition}
+import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{
+  ScClass,
+  ScObject,
+  ScTrait,
+  ScTypeDefinition
+}
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.SyntheticMembersInjector
 
 import scala.util.{Success, Try}
@@ -62,9 +70,9 @@ object Injector {
 
   def extractBoolean(expression: ScExpression): Option[Boolean] = {
     expression.getText match {
-      case "T" | "true" => Some(true)
+      case "T" | "true"  => Some(true)
       case "F" | "false" => Some(false)
-      case _ => None
+      case _             => None
     }
   }
 
@@ -73,23 +81,23 @@ object Injector {
     if (text.startsWith("z\"\"\"") && text.endsWith("\"\"\"")) {
       Try(BigInt(normNum(text.substring(4, text.length - 3)))) match {
         case Success(n) => return Some(n)
-        case _ =>
+        case _          =>
       }
 
     } else if (text.startsWith("z\"") && text.endsWith("\"")) {
       Try(BigInt(normNum(text.substring(2, text.length - 1)))) match {
         case Success(n) => return Some(n)
-        case _ =>
+        case _          =>
       }
     } else if (text.last.toUpper == 'L') {
       Try(BigInt(text.substring(0, text.length - 1))) match {
         case Success(n) => return Some(n)
-        case _ =>
+        case _          =>
       }
     } else {
       Try(BigInt(text)) match {
         case Success(n) => return Some(n)
-        case _ =>
+        case _          =>
       }
     }
     None
@@ -99,22 +107,23 @@ object Injector {
     val sb = new java.lang.StringBuilder(s.length)
     for (c <- s) c match {
       case ',' | ' ' | '_' =>
-      case _ => sb.append(c)
+      case _               => sb.append(c)
     }
     sb.toString
   }
 
-  def hasHashEqualString(source: ScTypeDefinition): (Boolean, Boolean, Boolean) = {
+  def hasHashEqualString(
+      source: ScTypeDefinition): (Boolean, Boolean, Boolean) = {
     var hasHash = false
     var hasEqual = false
     var hasString = false
 
     for (m <- source.extendsBlock.members) {
       m.getName match {
-        case "hash" => hasHash = true
+        case "hash"    => hasHash = true
         case "isEqual" => hasEqual = true
-        case "string" => hasString = true
-        case _ =>
+        case "string"  => hasString = true
+        case _         =>
       }
     }
     (hasHash, hasEqual, hasString)
@@ -122,64 +131,64 @@ object Injector {
 
   def zCompanionName(name: String): String = s"$$${name}Companion"
 
-  def iSName(name: String): String = "IS" + name
-
-  def mSName(name: String): String = "MS" + name
-
   def scName(name: String): String = name + "$Slang"
 
   def scPrefix(name: String): String = name.head.toLower + name.tail
 
-  def isSireum(source: ScTypeDefinition): Boolean = try {
-    val ext = source.getContainingFile.getVirtualFile.getExtension
-    ext match {
-      case "scala" =>
-        val input = source.getContainingFile.getViewProvider.getDocument.getCharsSequence
-        var i = 0
-        val sb = new java.lang.StringBuilder
-        var c = input.charAt(i)
-        while (i < input.length() && c != '\n') {
-          if (!c.isWhitespace) sb.append(c)
-          i = i + 1
-          c = input.charAt(i)
-        }
-        return sb.toString.contains("#Sireum")
-      case "sc" =>
-        val node = source.getContainingFile.getNode
-        val children = node.getChildren(null)
-        var i = 0
-        while (children(i).isInstanceOf[PsiWhiteSpace]) i += 1
-        children(i) match {
-          case e: CompositeElement => e.getPsi match {
-            case stmt: ScImportStmt =>
-              val exprs = stmt.importExprs
-              if (exprs.length != 1) return false
-              if (!exprs.head.isSingleWildcard) return false
-              exprs.head.qualifier.qualName match {
-                case "org.sireum" | "org.sireum.logika" => return true
+  def isSireum(source: ScTypeDefinition): Boolean =
+    try {
+      val ext = source.getContainingFile.getVirtualFile.getExtension
+      ext match {
+        case "scala" =>
+          val input =
+            source.getContainingFile.getViewProvider.getDocument.getCharsSequence
+          var i = 0
+          val sb = new java.lang.StringBuilder
+          var c = input.charAt(i)
+          while (i < input.length() && c != '\n') {
+            if (!c.isWhitespace) sb.append(c)
+            i = i + 1
+            c = input.charAt(i)
+          }
+          return sb.toString.contains("#Sireum")
+        case "sc" =>
+          val node = source.getContainingFile.getNode
+          val children = node.getChildren(null)
+          var i = 0
+          while (children(i).isInstanceOf[PsiWhiteSpace]) i += 1
+          children(i) match {
+            case e: CompositeElement =>
+              e.getPsi match {
+                case stmt: ScImportStmt =>
+                  val exprs = stmt.importExprs
+                  if (exprs.length != 1) return false
+                  if (!exprs.head.isSingleWildcard) return false
+                  exprs.head.qualifier.qualName match {
+                    case "org.sireum" | "org.sireum.logika" => return true
+                    case _                                  =>
+                  }
                 case _ =>
               }
             case _ =>
           }
-          case _ =>
-        }
-      case _ =>
+        case _ =>
+      }
+      false
+    } catch {
+      case _: Throwable => false
     }
-    false
-  } catch {
-    case _: Throwable => false
-  }
 
   implicit class ScClassParameters(val t: ScTypeDefinition) extends AnyVal {
     def parameters: Seq[Parameter] = {
-      def findClassPrimaryConstructor(e: PsiElement): Option[ScPrimaryConstructor] = {
+      def findClassPrimaryConstructor(
+          e: PsiElement): Option[ScPrimaryConstructor] = {
         e match {
           case e: ScPrimaryConstructor => return Some(e)
           case _ =>
             for (c <- e.getChildren) {
               findClassPrimaryConstructor(c) match {
-                case r@Some(_) => return r
-                case _ =>
+                case r @ Some(_) => return r
+                case _           =>
               }
             }
         }
@@ -189,7 +198,7 @@ object Injector {
       def findClassParameter(e: PsiElement): Seq[ScClassParameter] = {
         e match {
           case e: ScClassParameter => Vector(e)
-          case _ => e.getChildren.flatMap(findClassParameter)
+          case _                   => e.getChildren.flatMap(findClassParameter)
         }
       }
 
@@ -200,21 +209,21 @@ object Injector {
             val st = new java.util.StringTokenizer(typeText, "<>, \t\r\n", true)
             val sb = new java.lang.StringBuilder
             while (st.hasMoreTokens) sb.append(st.nextToken match {
-              case "boolean" => "_root_.org.sireum.B"
-              case "char" => "_root_.org.sireum.C"
-              case "float" => "_root_.org.sireum.F32"
-              case "double" => "_root_.org.sireum.F64"
+              case "boolean"          => "_root_.org.sireum.B"
+              case "char"             => "_root_.org.sireum.C"
+              case "float"            => "_root_.org.sireum.F32"
+              case "double"           => "_root_.org.sireum.F64"
               case "java.lang.String" => "_root_.org.sireum.String"
-              case "spire.math.Real" => "_root_.org.sireum.R"
-              case "<" => "["
-              case ">" => "]"
-              case s => s.trim
+              case "spire.math.Real"  => "_root_.org.sireum.R"
+              case "<"                => "["
+              case ">"                => "]"
+              case s                  => s.trim
             })
             return sb.toString
         }
         for (c <- p.getChildren) c match {
           case c: ScParameterType => return c.getText
-          case _ =>
+          case _                  =>
         }
         "scala.Any"
       }
@@ -222,7 +231,12 @@ object Injector {
       findClassPrimaryConstructor(t) match {
         case Some(c) =>
           for (p <- findClassParameter(c))
-            yield Parameter(p.getName, findType(p), p.getAnnotations, p.isVar, p.isVal)
+            yield
+              Parameter(p.getName,
+                        findType(p),
+                        p.getAnnotations,
+                        p.isVar,
+                        p.isVal)
         case _ => Seq()
       }
     }
@@ -248,7 +262,7 @@ class Injector extends SyntheticMembersInjector {
         for (a <- source.getAnnotations) {
           getAnnotationName(a) match {
             case "enum" => return EnumInjector.supers
-            case _ =>
+            case _      =>
           }
         }
         source.fakeCompanionClassOrCompanionClass match {
@@ -268,19 +282,20 @@ class Injector extends SyntheticMembersInjector {
         for (a <- source.getAnnotations) {
           getAnnotationName(a) match {
             case "datatype" => return DatatypeInjector.supers
-            case "record" => return RecordInjector.supers
-            case "sig" => return SigInjector.supers
-            case "msig" => return SigInjector.msupers
-            case _ =>
+            case "record"   => return RecordInjector.supers
+            case "sig"      => return SigInjector.supers
+            case "msig"     => return SigInjector.msupers
+            case _          =>
           }
         }
       case source: ScClass =>
         for (a <- source.getAnnotations) {
           getAnnotationName(a) match {
             case "datatype" => return DatatypeInjector.supers
-            case "record" => return RecordInjector.supers
-            case "range" => return RangeInjector.supers(source)
-            case "bits" => return BitsInjector.inject(source, a, BitsInjector.Mode.Supers)
+            case "record"   => return RecordInjector.supers
+            case "range"    => return RangeInjector.supers(source)
+            case "bits" =>
+              return BitsInjector.inject(source, a, BitsInjector.Mode.Supers)
             case _ =>
           }
         }
@@ -294,10 +309,10 @@ class Injector extends SyntheticMembersInjector {
     for (a <- source.getAnnotations) {
       getAnnotationName(a) match {
         case "datatype" => return true
-        case "record" => return true
-        case "range" => return true
-        case "bits" => return true
-        case _ =>
+        case "record"   => return true
+        case "range"    => return true
+        case "bits"     => return true
+        case _          =>
       }
     }
     false
@@ -319,13 +334,18 @@ class Injector extends SyntheticMembersInjector {
             for (a <- c.getAnnotations) {
               getAnnotationName(a) match {
                 case "datatype" =>
-                  return DatatypeInjector.inject(c, DatatypeInjector.Mode.Getter)
+                  return DatatypeInjector.inject(c,
+                                                 DatatypeInjector.Mode.Getter)
                 case "record" =>
                   return RecordInjector.inject(c, RecordInjector.Mode.Getter)
                 case "range" =>
-                  return RangeInjector.inject(c, a, RangeInjector.Mode.ObjectInners)
+                  return RangeInjector.inject(c,
+                                              a,
+                                              RangeInjector.Mode.ObjectInners)
                 case "bits" =>
-                  return BitsInjector.inject(c, a, BitsInjector.Mode.ObjectInners)
+                  return BitsInjector.inject(c,
+                                             a,
+                                             BitsInjector.Mode.ObjectInners)
                 case _ =>
               }
             }
@@ -343,7 +363,8 @@ class Injector extends SyntheticMembersInjector {
         for (a <- source.getAnnotations) {
           getAnnotationName(a) match {
             case "datatype" =>
-              return DatatypeInjector.inject(source, DatatypeInjector.Mode.Trait)
+              return DatatypeInjector.inject(source,
+                                             DatatypeInjector.Mode.Trait)
             case "record" =>
               return RecordInjector.inject(source, RecordInjector.Mode.Trait)
             case _ =>
@@ -353,7 +374,8 @@ class Injector extends SyntheticMembersInjector {
         for (a <- source.getAnnotations) {
           getAnnotationName(a) match {
             case "datatype" =>
-              return DatatypeInjector.inject(source, DatatypeInjector.Mode.Class)
+              return DatatypeInjector.inject(source,
+                                             DatatypeInjector.Mode.Class)
             case "record" =>
               return RecordInjector.inject(source, RecordInjector.Mode.Class)
             case "range" =>
@@ -376,7 +398,8 @@ class Injector extends SyntheticMembersInjector {
             for (a <- c.getAnnotations) {
               getAnnotationName(a) match {
                 case "datatype" =>
-                  return DatatypeInjector.inject(c, DatatypeInjector.Mode.Object)
+                  return DatatypeInjector.inject(c,
+                                                 DatatypeInjector.Mode.Object)
                 case "record" =>
                   return RecordInjector.inject(c, RecordInjector.Mode.Object)
                 case "range" =>
@@ -409,9 +432,13 @@ class Injector extends SyntheticMembersInjector {
             for (a <- c.getAnnotations) {
               getAnnotationName(a) match {
                 case "range" =>
-                  return RangeInjector.inject(c, a, RangeInjector.Mode.ObjectMembers)
+                  return RangeInjector.inject(c,
+                                              a,
+                                              RangeInjector.Mode.ObjectMembers)
                 case "bits" =>
-                  return BitsInjector.inject(c, a, BitsInjector.Mode.ObjectMembers)
+                  return BitsInjector.inject(c,
+                                             a,
+                                             BitsInjector.Mode.ObjectMembers)
                 case _ =>
               }
             }

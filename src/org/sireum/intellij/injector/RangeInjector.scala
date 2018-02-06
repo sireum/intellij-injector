@@ -28,7 +28,10 @@ package org.sireum.intellij.injector
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScClass
 import Injector._
 import com.intellij.psi.PsiAnnotation
-import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScAnnotation, ScAssignStmt}
+import org.jetbrains.plugins.scala.lang.psi.api.expr.{
+  ScAnnotation,
+  ScAssignStmt
+}
 
 object RangeInjector {
 
@@ -43,7 +46,9 @@ object RangeInjector {
   def objectSupers(source: ScClass): Seq[String] =
     Seq(s"$sireumPkg.$$ZCompanion[${source.getName}]")
 
-  def inject(source: ScClass, annotation: PsiAnnotation, mode: Mode.Type): Seq[String] = {
+  def inject(source: ScClass,
+             annotation: PsiAnnotation,
+             mode: Mode.Type): Seq[String] = {
     val args = annotation match {
       case annotation: ScAnnotation =>
         val argss = annotation.constructor.arguments
@@ -66,17 +71,17 @@ object RangeInjector {
           case "min" =>
             extractInt(re.get) match {
               case Some(n) => minOpt = Some(n)
-              case _ => return emptyResult
+              case _       => return emptyResult
             }
           case "max" =>
             extractInt(re.get) match {
               case Some(n) => maxOpt = Some(n)
-              case _ => return emptyResult
+              case _       => return emptyResult
             }
           case "index" =>
             extractBoolean(re.get) match {
               case Some(b) => index = b
-              case _ => return emptyResult
+              case _       => return emptyResult
             }
           case _ => return emptyResult
         }
@@ -87,28 +92,29 @@ object RangeInjector {
 
     val typeName = source.getName
     val iTermName = zCompanionName(typeName)
-    val isTypeName = iSName(typeName)
-    val msTypeName = mSName(typeName)
     val lowerTermName = scPrefix(typeName)
     val scTypeName = scName(typeName)
 
     lazy val (boxerType, boxerObject) = (minOpt, maxOpt) match {
       case (Some(min: BigInt), Some(max: BigInt)) =>
         if (scala.Byte.MinValue.toInt <= min && max.toInt <= scala.Byte.MaxValue)
-          (s"$typeName.Boxer", s"object Boxer extends _root_.org.sireum.Z.Boxer.Byte { def make(o: $scalaPkg.Byte): $typeName }")
+          (s"$typeName.Boxer",
+           s"object Boxer extends _root_.org.sireum.Z.Boxer.Byte { def make(o: $scalaPkg.Byte): $typeName }")
         else if (scala.Short.MinValue.toInt <= min && max.toInt <= scala.Short.MaxValue)
-          (s"$typeName.Boxer", s"object Boxer extends _root_.org.sireum.Z.Boxer.Short { def make(o: $scalaPkg.Short): $typeName }")
+          (s"$typeName.Boxer",
+           s"object Boxer extends _root_.org.sireum.Z.Boxer.Short { def make(o: $scalaPkg.Short): $typeName }")
         else if (scala.Int.MinValue <= min && max <= scala.Int.MaxValue)
-          (s"$typeName.Boxer", s"object Boxer extends _root_.org.sireum.Z.Boxer.Int { def make(o: $scalaPkg.Int): $typeName }")
+          (s"$typeName.Boxer",
+           s"object Boxer extends _root_.org.sireum.Z.Boxer.Int { def make(o: $scalaPkg.Int): $typeName }")
         else if (scala.Long.MinValue <= min && max <= scala.Long.MaxValue)
-          (s"$typeName.Boxer", s"object Boxer extends _root_.org.sireum.Z.Boxer.Long { def make(o: $scalaPkg.Long): $typeName }")
+          (s"$typeName.Boxer",
+           s"object Boxer extends _root_.org.sireum.Z.Boxer.Long { def make(o: $scalaPkg.Long): $typeName }")
         else (s"$sireumPkg.Z.Boxer.Z", "")
       case _ => (s"$sireumPkg.Z.Boxer.Z", "")
     }
 
     mode match {
       case Mode.Object =>
-
         r :+= s"def BitWidth: $scalaPkg.Int = ???"
         r :+= s"def random: $typeName = ???"
         r :+= s"def randomSeed(seed: $sireumPkg.Z): $typeName = ???"
@@ -120,7 +126,6 @@ object RangeInjector {
         r :+= s"implicit def to$scTypeName(sc: $scalaPkg.StringContext): $typeName.$scTypeName = ???"
 
       case Mode.Class =>
-
         r :+= s"override def value: $sireumPkg.Z = ???"
         r :+= s"override def make(v: $sireumPkg.Z): $typeName = ???"
         r :+= s"override def Name: $javaPkg.lang.String = ???"
@@ -134,7 +139,6 @@ object RangeInjector {
         r :+= s"override def boxer: $boxerType = ???"
 
       case Mode.ObjectInners =>
-
         if (boxerObject != "") r :+= boxerObject
 
         r :+=
@@ -166,20 +170,6 @@ object RangeInjector {
            """.stripMargin
 
         r :+=
-          s"""object $isTypeName {
-             |  def apply[V <: $sireumPkg.Immutable](args: V*): $typeName.$isTypeName[V] = $sireumPkg.IS[$typeName, V](args: _*)
-             |  def create[V <: $sireumPkg.Immutable](size: $sireumPkg.Z, default: V): $typeName.$isTypeName[V] = $sireumPkg.IS.create[$typeName, V](size, default)
-             |}
-           """.stripMargin
-
-        r :+=
-          s"""object $msTypeName {
-             |  def apply[V](args: V*): $typeName.$msTypeName[V] = $sireumPkg.MS[$typeName, V](args: _*)
-             |  def create[V](size: $sireumPkg.Z, default: V): $typeName.$isTypeName[V] = $sireumPkg.MS.create[$typeName, V](size, default)
-             |}
-           """.stripMargin
-
-        r :+=
           s"""class $scTypeName(val sc: $scalaPkg.StringContext) {
              |  object $lowerTermName {
              |    def apply(args: $scalaPkg.Any*): $typeName = ???
@@ -189,9 +179,6 @@ object RangeInjector {
            """.stripMargin
 
       case Mode.ObjectMembers =>
-
-        r :+= s"type $isTypeName[T <: $sireumPkg.Immutable] = $sireumPkg.IS[$typeName, T]"
-        r :+= s"type $msTypeName[T] = $sireumPkg.MS[$typeName, T]"
         r :+= s"val Name: $javaPkg.lang.String = ???"
         r :+= s"lazy val Min: $typeName = ???"
         r :+= s"lazy val Max: $typeName = ???"

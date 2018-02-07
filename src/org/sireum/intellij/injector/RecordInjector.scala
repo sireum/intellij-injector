@@ -43,40 +43,42 @@ object RecordInjector {
     val params = source.parameters
     val tparams = Option(source.getTypeParameterList) match {
       case Some(tpl) => tpl.getTypeParameters
-      case _ => Array[PsiTypeParameter]()
+      case _         => Array[PsiTypeParameter]()
     }
     val targs = for (tp <- tparams) yield tp.getName
     val typeArgs = if (targs.nonEmpty) s"[${targs.mkString(", ")}]" else ""
     val tpe = if (targs.nonEmpty) s"$name$typeArgs" else name
-    val typeParams = if (targs.nonEmpty) s"[${tparams.map(_.getText).mkString(", ")}]" else ""
+    val typeParams =
+      if (targs.nonEmpty) s"[${tparams.map(_.getText).mkString(", ")}]" else ""
     var r = Vector[String]()
 
     mode match {
 
       case Mode.Object =>
-
         val ps = for (p <- params) yield s"${p.name}: ${p.tpe}"
 
         r :+= s"def apply$typeParams(${ps.mkString(", ")}): $tpe = ???"
 
         r :+= s"implicit def toGetter$typeParams(o: $tpe): $name.Getter$typeArgs = ???"
 
-      {
-        var unapplyTypes = Vector[String]()
-        for (p <- params) {
-          if (!p.annotations.exists(a => "hidden" == getAnnotationName(a))) {
-            unapplyTypes :+= p.tpe
+        {
+          var unapplyTypes = Vector[String]()
+          for (p <- params) {
+            if (!p.annotations.exists(a => "hidden" == getAnnotationName(a))) {
+              unapplyTypes :+= p.tpe
+            }
           }
+          r :+= (unapplyTypes.size match {
+            case 0 =>
+              s"def unapply$typeParams(o: $tpe): $scalaPkg.Boolean = ???"
+            case 1 =>
+              s"def unapply$typeParams(o: $tpe): $scalaPkg.Option[${unapplyTypes.head}] = ???"
+            case _ =>
+              s"def unapply$typeParams(o: $tpe): $scalaPkg.Option[(${unapplyTypes.mkString(", ")})] = ???"
+          })
         }
-        r :+= (unapplyTypes.size match {
-          case 0 => s"def unapply$typeParams(o: $tpe): $scalaPkg.Boolean = ???"
-          case 1 => s"def unapply$typeParams(o: $tpe): $scalaPkg.Option[${unapplyTypes.head}] = ???"
-          case _ => s"def unapply$typeParams(o: $tpe): $scalaPkg.Option[(${unapplyTypes.mkString(", ")})] = ???"
-        })
-      }
 
       case Mode.Class =>
-
         if (!pureSlangMode) {
           r ++= (for (p <- params) yield {
             val gName = p.name.head.toUpper + p.name.substring(1)
@@ -89,20 +91,23 @@ object RecordInjector {
           })
         }
 
+        r ++= (for (p <- params) yield {
+          s"private val _${p.name} = ${p.name}"
+        })
+
         r :+= s"override def $$clone: $tpe = ???"
 
         r :+= s"override def $$content: $scalaPkg.Seq[($scalaPkg.String, $scalaPkg.Any)] = ???"
 
-      {
-        val ps = for (p <- params) yield s"${p.name}: ${p.tpe} = ${p.name}"
-        r :+= s"def apply(${ps.mkString(", ")}): $tpe = ???"
-      }
+        {
+          val ps = for (p <- params) yield s"${p.name}: ${p.tpe} = ${p.name}"
+          r :+= s"def apply(${ps.mkString(", ")}): $tpe = ???"
+        }
 
       case Mode.Trait =>
-
       case Mode.Getter =>
-
-        val getters = for (p <- params if !p.isVar && !p.isVal) yield s"def ${p.name}: ${p.tpe} = ???"
+        val getters = for (p <- params if !p.isVar && !p.isVal)
+          yield s"def ${p.name}: ${p.tpe} = o._${p.name}"
         r :+=
           s"""class Getter$typeParams(val o: $tpe) extends $scalaPkg.AnyVal {
              |  ${getters.mkString("\n  ")}
@@ -111,17 +116,20 @@ object RecordInjector {
 
     mode match {
       case Mode.Class | Mode.Trait =>
-
         val (hasHash, hasEqual, hasString) = hasHashEqualString(source)
 
         if (hasHash) r :+= s"override def hashCode: $scalaPkg.Int = ???"
-        else if (mode == Mode.Class) r :+= s"override def hash: $sireumPkg.Z = ???"
+        else if (mode == Mode.Class)
+          r :+= s"override def hash: $sireumPkg.Z = ???"
 
-        if (hasEqual || mode == Mode.Class) r :+= s"override def equals(o: $scalaPkg.Any): $scalaPkg.Boolean = ???"
+        if (hasEqual || mode == Mode.Class)
+          r :+= s"override def equals(o: $scalaPkg.Any): $scalaPkg.Boolean = ???"
 
-        if (hasString || mode == Mode.Class) r :+= s"override def toString: $javaPkg.String = ???"
+        if (hasString || mode == Mode.Class)
+          r :+= s"override def toString: $javaPkg.String = ???"
 
-        if (!hasString && mode == Mode.Class) r :+= s"override def string: $sireumString = ???"
+        if (!hasString && mode == Mode.Class)
+          r :+= s"override def string: $sireumString = ???"
 
       case _ =>
     }

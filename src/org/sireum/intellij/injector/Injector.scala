@@ -139,7 +139,7 @@ object Injector {
     try {
       val ext = source.getContainingFile.getVirtualFile.getExtension
       ext match {
-        case "scala" =>
+        case "scala" | "sc" =>
           val input =
             source.getContainingFile.getViewProvider.getDocument.getCharsSequence
           var i = 0
@@ -151,26 +151,6 @@ object Injector {
             c = input.charAt(i)
           }
           return sb.toString.contains("#Sireum")
-        case "sc" =>
-          val node = source.getContainingFile.getNode
-          val children = node.getChildren(null)
-          var i = 0
-          while (children(i).isInstanceOf[PsiWhiteSpace]) i += 1
-          children(i) match {
-            case e: CompositeElement =>
-              e.getPsi match {
-                case stmt: ScImportStmt =>
-                  val exprs = stmt.importExprs
-                  if (exprs.length != 1) return false
-                  if (!exprs.head.isSingleWildcard) return false
-                  exprs.head.qualifier.qualName match {
-                    case "org.sireum" | "org.sireum.logika" => return true
-                    case _                                  =>
-                  }
-                case _ =>
-              }
-            case _ =>
-          }
         case _ =>
       }
       false

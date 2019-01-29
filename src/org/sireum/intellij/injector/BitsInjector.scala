@@ -129,6 +129,7 @@ object BitsInjector {
         (s"$scalaPkg.Long",
          s"$sireumPkg.Z.BV.Long[$typeName]",
          s"$sireumPkg.Z.Boxer.Long")
+      case _ => return Seq()
     }
 
     mode match {

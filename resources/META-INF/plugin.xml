@@ -27,8 +27,7 @@
   <id>org.sireum.intellij.injector</id>
   <name>Sireum Language (Slang) Injector</name>
   <version>4.0.0-SNAPSHOT</version>
-  <vendor email="robby@santoslab.org" url="http://robby.santoslab.org">Robby, SAnToS Lab, Kansas State University
-  </vendor>
+  <vendor>SAnToS Lab, Kansas State University</vendor>
 
   <description><![CDATA[
         <a href="http://sireum.org">Sireum</a> is a software analysis platform being

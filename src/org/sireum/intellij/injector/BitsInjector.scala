@@ -59,7 +59,7 @@ object BitsInjector {
     val bi32 = BigInt(32)
     val bi64 = BigInt(64)
 
-    var signed: Boolean = true
+    var signedOpt: Option[Boolean] = None
     var width: Int = 0
     var minOpt: Option[BigInt] = None
     var maxOpt: Option[BigInt] = None
@@ -74,7 +74,7 @@ object BitsInjector {
         name match {
           case "signed" =>
             extractBoolean(re.get) match {
-              case Some(b) => signed = b
+              case Some(b) => signedOpt = Some(b)
               case _       => return emptyResult
             }
           case "width" =>
@@ -103,6 +103,31 @@ object BitsInjector {
           case _ => return emptyResult
         }
       case _ => return emptyResult
+    }
+
+    val signed = signedOpt match {
+      case Some(x) => x
+      case _ => if (minOpt.isDefined) minOpt.get < 0 else true
+    }
+
+    if (width == 0) {
+      width = (minOpt, maxOpt) match {
+        case (Some(min), Some(max)) =>
+          if (signed) {
+            if (Byte.MinValue.toInt <= min && max <= Byte.MaxValue.toInt) 8
+            else if (Short.MinValue.toInt <= min && max <= Short.MaxValue.toInt) 16
+            else if (Int.MinValue <= min && max <= Int.MaxValue) 32
+            else if (Long.MinValue <= min && max <= Long.MaxValue) 64
+            else return emptyResult
+          } else {
+            if (0 <= min && max <= Byte.MaxValue.toInt - Byte.MinValue.toInt) 8
+            else if (0 <= min && max <= Short.MaxValue.toInt - Short.MinValue.toInt) 16
+            else if (0 <= min && max <= Int.MaxValue.toLong - Int.MinValue.toLong) 32
+            else if (0 <= min && max <= BigInt(Long.MaxValue) - BigInt(Long.MinValue)) 64
+            else return emptyResult
+          }
+        case _ => return emptyResult
+      }
     }
 
     var r = Vector[String]()

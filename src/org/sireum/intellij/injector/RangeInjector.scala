@@ -28,10 +28,8 @@ package org.sireum.intellij.injector
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScClass
 import Injector._
 import com.intellij.psi.PsiAnnotation
-import org.jetbrains.plugins.scala.lang.psi.api.expr.{
-  ScAnnotation,
-  ScAssignStmt
-}
+import org.jetbrains.plugins.scala.lang.psi.api.base.ScAnnotation
+import org.jetbrains.plugins.scala.lang.psi.api.expr.ScAssignment
 
 object RangeInjector {
 
@@ -51,7 +49,7 @@ object RangeInjector {
              mode: Mode.Type): Seq[String] = {
     val args = annotation match {
       case annotation: ScAnnotation =>
-        val argss = annotation.constructor.arguments
+        val argss = annotation.constructorInvocation.arguments
         if (argss.size != 1) return emptyResult
         argss.head.exprs
       case _ => return emptyResult
@@ -62,11 +60,11 @@ object RangeInjector {
     var index: Boolean = false
 
     for (arg <- args) arg match {
-      case arg: ScAssignStmt =>
-        val an = arg.assignName
-        val re = arg.getRExpression
+      case arg: ScAssignment =>
+        val an = arg.referenceName
+        val re = arg.rightExpression
         if (an.isEmpty || re.isEmpty) return emptyResult
-        val name = arg.assignName.get
+        val name = arg.referenceName.get
         name match {
           case "min" =>
             extractInt(re.get) match {

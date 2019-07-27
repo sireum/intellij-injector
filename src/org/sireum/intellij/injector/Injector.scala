@@ -25,15 +25,13 @@
 
 package org.sireum.intellij.injector
 
-import com.intellij.psi.{PsiAnnotation, PsiElement, PsiWhiteSpace}
-import com.intellij.psi.impl.source.tree.CompositeElement
+import com.intellij.psi.{PsiAnnotation, PsiElement}
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScPrimaryConstructor
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScExpression
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{
   ScClassParameter,
   ScParameterType
 }
-import org.jetbrains.plugins.scala.lang.psi.api.toplevel.imports.ScImportStmt
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{
   ScClass,
   ScObject,

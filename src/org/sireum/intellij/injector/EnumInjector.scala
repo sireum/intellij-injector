@@ -25,7 +25,7 @@
 
 package org.sireum.intellij.injector
 
-import org.jetbrains.plugins.scala.lang.psi.api.base.ScLiteral
+import org.jetbrains.plugins.scala.lang.psi.api.base.literals.ScSymbolLiteral
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScObject
 import org.sireum.intellij.injector.Injector._
 
@@ -67,7 +67,7 @@ object EnumInjector {
         for (b <- source.extendsBlock.templateBody;
              e <- b.getChildren) {
           e match {
-            case e: ScLiteral if e.isSymbol =>
+            case e: ScSymbolLiteral =>
               val name = e.getValue.toString.substring(1)
               r :+=
                 s"""final case object $name extends Type {

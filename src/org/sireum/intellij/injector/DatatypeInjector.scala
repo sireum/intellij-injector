@@ -89,7 +89,7 @@ object DatatypeInjector {
         }
 
         r ++= (for (p <- params) yield {
-          s"private val _${p.name} = ${p.name}"
+          s"private def _${p.name} = ${p.name}"
         })
 
         {

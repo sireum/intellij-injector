@@ -93,7 +93,7 @@ object RecordInjector {
 
         r ++= (for (p <- params) yield {
           if (p.isVar) s"private var _${p.name} = ${p.name}"
-          else s"private val _${p.name} = ${p.name}"
+          else s"private def _${p.name} = ${p.name}"
         })
 
         r :+= s"override def $$clone: $tpe = ???"

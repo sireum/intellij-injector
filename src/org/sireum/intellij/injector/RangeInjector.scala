@@ -186,7 +186,7 @@ object RangeInjector {
         r :+= s"val isBitVector: $scalaPkg.Boolean = ???"
         r :+= s"val hasMin: $scalaPkg.Boolean = ???"
         r :+= s"val hasMax: $scalaPkg.Boolean = ???"
-        r :+= s"implicit val $iTermName: _root_.org.sireum.$$ZCompanion[$typeName]"
+        r :+= s"implicit val $iTermName: _root_.org.sireum.$$ZCompanion[$typeName] = ???"
     }
 
     r

@@ -26,7 +26,7 @@
 <idea-plugin>
   <id>org.sireum.intellij.injector</id>
   <name>Sireum Language (Slang) Injector</name>
-  <version>4.0.0-SNAPSHOT</version>
+  <version>5.0.0-SNAPSHOT</version>
   <vendor>SAnToS Lab, Kansas State University</vendor>
 
   <description><![CDATA[

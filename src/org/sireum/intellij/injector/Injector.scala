@@ -133,28 +133,45 @@ object Injector {
 
   def scPrefix(name: String): String = name.head.toLower + name.tail
 
-  def isSireum(source: ScTypeDefinition): Boolean =
+  def isSireum(source: ScTypeDefinition): Boolean = {
+    def detect(index: Int): Boolean = {
+      val input =
+        source.getContainingFile.getViewProvider.getDocument.getCharsSequence
+      var i = index
+      val sb = new java.lang.StringBuilder
+      var c = input.charAt(i)
+      while (i < input.length() && c != '\n') {
+        if (!c.isWhitespace) sb.append(c)
+        i = i + 1
+        c = input.charAt(i)
+      }
+      sb.toString.contains("#Sireum")
+    }
     try {
       val ext = source.getContainingFile.getVirtualFile.getExtension
       ext match {
-        case "scala" | "sc" =>
+        case "scala" | "sc" | "cmd" =>
           val input =
-            source.getContainingFile.getViewProvider.getDocument.getCharsSequence
-          var i = 0
-          val sb = new java.lang.StringBuilder
-          var c = input.charAt(i)
-          while (i < input.length() && c != '\n') {
-            if (!c.isWhitespace) sb.append(c)
-            i = i + 1
-            c = input.charAt(i)
+            source.getContainingFile.getViewProvider.getDocument.getText
+          if (input.startsWith("::#!")) {
+            var i = input.indexOf("::!#")
+            if (i < 0) {
+              return false
+            }
+            while (i < input.length && input(i) != '\n') {
+              i = i + 1
+            }
+            return detect(i + 1)
+          } else {
+            return detect(0)
           }
-          return sb.toString.contains("#Sireum")
         case _ =>
       }
       false
     } catch {
       case _: Throwable => false
     }
+  }
 
   implicit class ScClassParameters(val t: ScTypeDefinition) extends AnyVal {
     def parameters: Seq[Parameter] = {

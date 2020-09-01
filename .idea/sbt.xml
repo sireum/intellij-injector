@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaSbtSettings">
+    <option name="customVMPath" />
     <option name="maximumHeapSize" value="4096" />
-    <option name="vmParameters" value="-XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss4m -Dorg.sireum.home=/Users/robby/Repositories/Sireum/sireum-v3" />
   </component>
 </project>

@@ -71,8 +71,8 @@ object EnumInjector {
               val name = e.getValue.toString.substring(1)
               r :+=
                 s"""final case object $name extends Type {
-                   |  def ordinal: $sireumPkg.Z = ???
-                   |  def name: $sireumString = ???
+                   |  override def ordinal: $sireumPkg.Z = ???
+                   |  override def name: $sireumString = ???
                    |}
                  """.stripMargin
             case _ =>
@@ -83,7 +83,7 @@ object EnumInjector {
 
         r :+= s"val numOfElements: $sireumPkg.Z = ???"
 
-        r :+= s"val elements: $sireumPkg.ISZ[Type] = ???"
+        r :+= s"val elements: $sireumPkg.ISZ[$name.Type] = ???"
 
     }
 

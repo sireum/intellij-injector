@@ -5,3 +5,4 @@ sed -i.bak "s/5.0.0-SNAPSHOT/${VER}/g" META-INF/plugin.xml
 7z a sireum-injector.jar META-INF/plugin.xml
 rm -fR META-INF
 mv sireum-injector.jar sireum-injector.zip
+echo $VER

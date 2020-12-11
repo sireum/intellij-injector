@@ -25,7 +25,7 @@
 
 package org.sireum.intellij.injector
 
-import org.jetbrains.plugins.scala.lang.psi.api.base.literals.ScSymbolLiteral
+import org.jetbrains.plugins.scala.lang.psi.api.base.literals.{ScStringLiteral, ScSymbolLiteral}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScObject
 import org.sireum.intellij.injector.Injector._
 
@@ -64,17 +64,18 @@ object EnumInjector {
              |}
          """.stripMargin
 
-        for (b <- source.extendsBlock.templateBody;
-             e <- b.getChildren) {
-          e match {
-            case e: ScSymbolLiteral =>
-              val name = e.getValue.toString.substring(1)
-              r :+=
-                s"""final case object $name extends Type {
-                   |  override def ordinal: $sireumPkg.Z = ???
-                   |  override def name: $sireumString = ???
-                   |}
+        for (b <- source.extendsBlock.templateBody; e <- b.getChildren) {
+          def addLiteral(name: String): Unit = {
+            r :+=
+              s"""final case object $name extends Type {
+                 |  override def ordinal: $sireumPkg.Z = ???
+                 |  override def name: $sireumString = ???
+                 |}
                  """.stripMargin
+          }
+          e match {
+            case e: ScStringLiteral => addLiteral(e.getValue)
+            case e: ScSymbolLiteral => addLiteral(e.getValue.toString.substring(1))
             case _ =>
           }
         }

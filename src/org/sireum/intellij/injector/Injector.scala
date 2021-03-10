@@ -198,9 +198,13 @@ object Injector {
       }
 
       def findType(p: ScClassParameter): String = {
-        p.getType.getCanonicalText match {
+        val typeText: String = p.getRealParameterType match {
+          case Left(_) => p.getType.getCanonicalText
+          case Right(value) => value.canonicalText
+        }
+        typeText match {
           case "java.lang.Object" =>
-          case typeText =>
+          case _ =>
             val st = new java.util.StringTokenizer(typeText, "<>, \t\r\n", true)
             val sb = new java.lang.StringBuilder
             while (st.hasMoreTokens) sb.append(st.nextToken match {

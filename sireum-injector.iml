@@ -9,6 +9,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="scala-sdk-2.13.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Scala" level="project" />
   </component>
 </module>

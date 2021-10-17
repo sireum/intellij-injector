@@ -199,13 +199,16 @@ object Injector {
 
       def findType(p: ScClassParameter): String = {
         val typeText: String = p.getRealParameterType match {
-          case Left(_) => p.getType.getCanonicalText
+          case Left(_) => p.expectedParamType match {
+            case Some(t) => t.toPsiType.getCanonicalText
+            case _ => "java.lang.Object"
+          }
           case Right(value) => value.canonicalText
         }
         typeText match {
           case "java.lang.Object" =>
           case _ =>
-            val st = new java.util.StringTokenizer(typeText, "<>, \t\r\n", true)
+            val st = new java.util.StringTokenizer(typeText.replace("=>", "⇒"), "⇒<>, \t\r\n", true)
             val sb = new java.lang.StringBuilder
             while (st.hasMoreTokens) sb.append(st.nextToken match {
               case "boolean"          => "_root_.org.sireum.B"
@@ -216,6 +219,7 @@ object Injector {
               case "spire.math.Real"  => "_root_.org.sireum.R"
               case "<"                => "["
               case ">"                => "]"
+              case "⇒"                => " => "
               case s                  => s.trim
             })
             return sb.toString

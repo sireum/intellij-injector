@@ -75,7 +75,7 @@ object EnumInjector {
           }
           e match {
             case e: ScStringLiteral => addLiteral(e.getValue)
-            case e: ScSymbolLiteral => addLiteral(e.getValue.toString.substring(1))
+            case e: ScSymbolLiteral => addLiteral(e.getValue.name)
             case _ =>
           }
         }

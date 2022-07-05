@@ -59,6 +59,8 @@ object EnumInjector {
              |  def ordinal: $sireumPkg.Z
              |  def name: $sireumString
              |  final def hash: $sireumPkg.Z = ???
+             |  final def ===(other: Type): $sireumPkg.B = ???
+             |  final def =!=(other: Type): $sireumPkg.B = ???
              |  final def isEqual(other: Type): $sireumPkg.B = ???
              |  final def compare(that: Type): $scalaPkg.Int = ???
              |}

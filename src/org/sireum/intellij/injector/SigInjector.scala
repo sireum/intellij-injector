@@ -29,6 +29,6 @@ import org.sireum.intellij.injector.Injector._
 
 object SigInjector {
 
-  val supers = Seq(immutable)
-  val msupers = Seq(mutable)
+  val supers: Seq[String] = Seq(sig)
+  val msupers: Seq[String] = Seq(msig)
 }

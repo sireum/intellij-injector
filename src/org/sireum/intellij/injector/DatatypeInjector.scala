@@ -36,7 +36,7 @@ object DatatypeInjector {
     val Object, Class, Trait, Getter = Value
   }
 
-  val supers = Seq(datatypeSig)
+  val supers: Seq[String] = Seq(datatypeSig)
 
   def inject(source: ScTypeDefinition, mode: Mode.Type): Seq[String] = {
     val name = source.getName

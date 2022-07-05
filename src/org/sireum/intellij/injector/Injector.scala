@@ -58,6 +58,8 @@ object Injector {
   val recordSig = s"$sireumPkg.RecordSig"
   val immutable = s"$sireumPkg.Immutable"
   val mutable = s"$sireumPkg.Mutable"
+  val sig = s"$sireumPkg.SigTrait"
+  val msig = s"$sireumPkg.MSigTrait"
   val scalaPkg = "_root_.scala"
   val javaPkg = "_root_.java"
 

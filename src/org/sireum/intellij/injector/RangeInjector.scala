@@ -113,7 +113,7 @@ object RangeInjector {
 
     mode match {
       case Mode.Object =>
-        r :+= s"def BitWidth: $scalaPkg.Int = ???"
+        r :+= s"def BitWidth: $sireumPkg.Z = ???"
         r :+= s"def random: $typeName = ???"
         r :+= s"def randomSeed(seed: $sireumPkg.Z): $typeName = ???"
         r :+= s"def apply(n: $scalaPkg.Int): $typeName = ???"
@@ -126,14 +126,16 @@ object RangeInjector {
       case Mode.Class =>
         r :+= s"override def value: $sireumPkg.Z = ???"
         r :+= s"override def make(v: $sireumPkg.Z): $typeName = ???"
-        r :+= s"override def Name: $javaPkg.lang.String = ???"
+        r :+= s"override def Name: $sireumPkg.String = ???"
         r :+= s"override def Min: $typeName = ???"
         r :+= s"override def Max: $typeName = ???"
         r :+= s"override def Index: $typeName = ???"
-        r :+= s"override def isZeroIndex: $scalaPkg.Boolean = ???"
-        r :+= s"override def isSigned: $scalaPkg.Boolean = ???"
-        r :+= s"override def hasMin: $scalaPkg.Boolean = ???"
-        r :+= s"override def hasMax: $scalaPkg.Boolean = ???"
+        r :+= s"override def isZeroIndex: $sireumPkg.B = ???"
+        r :+= s"override def isSigned: $sireumPkg.B = ???"
+        r :+= s"override def hasMin: $sireumPkg.B = ???"
+        r :+= s"override def hasMax: $sireumPkg.B = ???"
+        r :+= s"override def ===(other: $typeName): $sireumPkg.B = ???"
+        r :+= s"override def =!=(other: $typeName): $sireumPkg.B = ???"
         r :+= s"override def boxer: $boxerType = ???"
 
       case Mode.ObjectInners =>
@@ -177,15 +179,15 @@ object RangeInjector {
            """.stripMargin
 
       case Mode.ObjectMembers =>
-        r :+= s"val Name: $javaPkg.lang.String = ???"
+        r :+= s"val Name: $sireumPkg.String = ???"
         r :+= s"lazy val Min: $typeName = ???"
         r :+= s"lazy val Max: $typeName = ???"
         r :+= s"val Index: $typeName = ???"
-        r :+= s"val isZeroIndex: $scalaPkg.Boolean = ???"
-        r :+= s"val isSigned: $scalaPkg.Boolean = ???"
-        r :+= s"val isBitVector: $scalaPkg.Boolean = ???"
-        r :+= s"val hasMin: $scalaPkg.Boolean = ???"
-        r :+= s"val hasMax: $scalaPkg.Boolean = ???"
+        r :+= s"val isZeroIndex: $sireumPkg.B = ???"
+        r :+= s"val isSigned: $sireumPkg.B = ???"
+        r :+= s"val isBitVector: $sireumPkg.B = ???"
+        r :+= s"val hasMin: $sireumPkg.B = ???"
+        r :+= s"val hasMax: $sireumPkg.B = ???"
         r :+= s"implicit val $iTermName: _root_.org.sireum.$$ZCompanion[$typeName] = ???"
     }
 

@@ -36,7 +36,7 @@ object RecordInjector {
     val Object, Class, Trait, Getter = Value
   }
 
-  val supers = Seq(recordSig)
+  val supers: Seq[String] = Seq(recordSig)
 
   def inject(source: ScTypeDefinition, mode: Mode.Type): Seq[String] = {
     val name = source.getName

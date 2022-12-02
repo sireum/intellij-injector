@@ -164,6 +164,15 @@ object Injector {
               i = i + 1
             }
             return detect(i + 1)
+          } else if (input.startsWith("::/*#!")) {
+            var i = input.indexOf("::!#*/")
+            if (i < 0) {
+              return false
+            }
+            while (i < input.length && input(i) != '\n') {
+              i = i + 1
+            }
+            return detect(i + 1)
           } else {
             return detect(0)
           }

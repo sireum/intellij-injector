@@ -28,18 +28,12 @@ package org.sireum.intellij.injector
 import com.intellij.psi.{PsiAnnotation, PsiElement}
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScPrimaryConstructor
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScExpression
-import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{
-  ScClassParameter,
-  ScParameterType
-}
-import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{
-  ScClass,
-  ScObject,
-  ScTrait,
-  ScTypeDefinition
-}
+import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScValueOrVariable, ScVariable, ScVariableDeclaration, ScVariableDefinition}
+import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{ScClassParameter, ScParameterType}
+import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScObject, ScTrait, ScTypeDefinition}
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.SyntheticMembersInjector
 
+import scala.collection.mutable.ArrayBuffer
 import scala.util.{Success, Try}
 
 object Injector {
@@ -182,6 +176,39 @@ object Injector {
     } catch {
       case _: Throwable => false
     }
+  }
+
+  val varCache: java.util.WeakHashMap[ScTypeDefinition, Seq[String]] = new java.util.WeakHashMap
+
+  def getVariables(td: ScTypeDefinition): Seq[String] = {
+    var r = varCache.get(td)
+    if (r != null) {
+      return r
+    }
+    val ps = ArrayBuffer[String]()
+    for (p <- td.parameters) {
+      ps += s"${p.name} : ${p.tpe} = ???"
+    }
+    for (v <- td.members) {
+      v match {
+        case v: ScVariable =>
+          v.`type` match {
+            case Right(t) =>
+              val ts = t.canonicalText
+              for (de <- v.declaredElements) {
+                ps += s"${de.getName} : $ts = ???"
+              }
+            case _ =>
+          }
+        case _ =>
+      }
+    }
+//    import com.intellij.notification.{Notification, NotificationType, Notifications}
+//    val n = new Notification("org.sireum", s"${std.qualifiedName} : ${ps.mkString(", ")}", NotificationType.INFORMATION)
+//    Notifications.Bus.notify(n, null)
+    r = ps.toSeq
+    varCache.put(td, r)
+    r
   }
 
   implicit class ScClassParameters(val t: ScTypeDefinition) extends AnyVal {
@@ -376,11 +403,9 @@ class Injector extends SyntheticMembersInjector {
       case source: ScTrait =>
         for (a <- source.getAnnotations) {
           getAnnotationName(a) match {
-            case "datatype" =>
-              return DatatypeInjector.inject(source,
-                                             DatatypeInjector.Mode.Trait)
-            case "record" =>
-              return RecordInjector.inject(source, RecordInjector.Mode.Trait)
+            case "datatype" => return DatatypeInjector.inject(source, DatatypeInjector.Mode.Trait)
+            case "record" => return RecordInjector.inject(source, RecordInjector.Mode.Trait)
+            case "sig" | "msig" => return SigInjector.inject(source)
             case _ =>
           }
         }

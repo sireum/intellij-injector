@@ -25,10 +25,44 @@
 
 package org.sireum.intellij.injector
 
+import com.intellij.psi.PsiTypeParameter
+import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTrait
 import org.sireum.intellij.injector.Injector._
+
+import scala.collection.mutable.ArrayBuffer
 
 object SigInjector {
 
   val supers: Seq[String] = Seq(sig)
   val msupers: Seq[String] = Seq(msig)
+
+  def inject(source: ScTrait): Seq[String] = {
+    val name = source.getName
+    val tparams = Option(source.getTypeParameterList) match {
+      case Some(tpl) => tpl.getTypeParameters
+      case _ => Array[PsiTypeParameter]()
+    }
+    val targs = for (tp <- tparams) yield tp.getName
+    val typeArgs = if (targs.nonEmpty) s"[${targs.mkString(", ")}]" else ""
+    val tpe = if (targs.nonEmpty) s"$name$typeArgs" else name
+
+    var r = Vector[String]()
+    val ps = getVariables(source)
+    if (ps.nonEmpty) {
+      r :+= s"def apply(${ps.mkString(", ")}): $tpe = ???"
+    }
+
+    val (hasHash, hasEqual, hasString) = hasHashEqualString(source)
+
+    if (hasHash) r :+= s"override def hashCode: $scalaPkg.Int = ???"
+
+    if (hasEqual) r :+= s"override def equals(o: $scalaPkg.Any): $scalaPkg.Boolean = ???"
+
+    if (hasString) r :+= s"override def toString: $javaPkg.String = ???"
+
+    if (!hasString) r :+= s"override def string: $sireumString = ???"
+
+    r
+  }
+
 }

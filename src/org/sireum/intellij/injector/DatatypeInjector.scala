@@ -26,9 +26,10 @@
 package org.sireum.intellij.injector
 
 import com.intellij.psi.PsiTypeParameter
-import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScValueDeclaration, ScValueOrVariable, ScVariableDeclaration}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinition
 import org.sireum.intellij.injector.Injector._
+
+import scala.collection.mutable.ArrayBuffer
 
 object DatatypeInjector {
 
@@ -93,31 +94,13 @@ object DatatypeInjector {
           s"private def _${p.name} = ${p.name}"
         })
 
-        {
-          var ps = for (p <- params) yield s"${p.name}: ${p.tpe} = ???"
-          for (v <- source.members) {
-            v match {
-              case v: ScValueDeclaration =>
-                for (f <- v.getIdList.fieldIds) {
-                  v.`type` match {
-                    case Right(t) => ps = ps :+ s"${f.name} : ${t.canonicalText} = ???"
-                    case _ =>
-                  }
-                }
-              case v: ScVariableDeclaration =>
-                for (f <- v.getIdList.fieldIds) {
-                  v.`type` match {
-                    case Right(t) => ps = ps :+ s"${f.name} : ${t.canonicalText} = ???"
-                    case _ =>
-                  }
-                }
-              case _ =>
-            }
-          }
-          r :+= s"def apply(${ps.mkString(", ")}): $tpe = ???"
-        }
+        r :+= s"def apply(${getVariables(source).mkString(", ")}): $tpe = ???"
 
       case Mode.Trait =>
+        val ps = getVariables(source)
+        if (ps.nonEmpty) {
+          r :+= s"def apply(${ps.mkString(", ")}): $tpe = ???"
+        }
       case Mode.Getter =>
         val getters = for (p <- params if !p.isVal)
           yield s"def ${p.name}: ${p.tpe} = o._${p.name}"

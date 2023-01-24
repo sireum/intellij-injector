@@ -134,6 +134,7 @@ object RangeInjector {
         r :+= s"override def isSigned: $sireumPkg.B = ???"
         r :+= s"override def hasMin: $sireumPkg.B = ???"
         r :+= s"override def hasMax: $sireumPkg.B = ???"
+        r :+= s"override def toZ: $sireumPkg.Z = ???"
         r :+= s"override def ===(other: $typeName): $sireumPkg.B = ???"
         r :+= s"override def =!=(other: $typeName): $sireumPkg.B = ???"
         r :+= s"override def boxer: $boxerType = ???"

@@ -181,6 +181,7 @@ object BitsInjector {
         r :+= s"override def isZeroIndex: $sireumPkg.B = ???"
         r :+= s"override def isSigned: $sireumPkg.B = ???"
         r :+= s"override def isWrapped: $sireumPkg.B = ???"
+        r :+= s"override def toZ: $sireumPkg.Z = ???"
         r :+= s"override def ===(other: $typeName): $sireumPkg.B = ???"
         r :+= s"override def =!=(other: $typeName): $sireumPkg.B = ???"
         r :+= s"override def boxer: $typeName.Boxer = ???"

@@ -114,8 +114,11 @@ object RangeInjector {
     mode match {
       case Mode.Object =>
         r :+= s"def BitWidth: $sireumPkg.Z = ???"
+        r :+= s"def fromZ(n: $sireumPkg.Z): $typeName = ???"
         r :+= s"def random: $typeName = ???"
+        r :+= s"def randomBetween(min: $typeName, max: $typeName): $typeName = ???"
         r :+= s"def randomSeed(seed: $sireumPkg.Z): $typeName = ???"
+        r :+= s"def randomSeedBetween(seed: $sireumPkg.Z, min: $typeName, max: $typeName): $typeName = ???"
         r :+= s"def apply(n: $scalaPkg.Int): $typeName = ???"
         r :+= s"def apply(n: $scalaPkg.Long): $typeName = ???"
         r :+= s"def apply(n: $sireumPkg.Z): $typeName = ???"

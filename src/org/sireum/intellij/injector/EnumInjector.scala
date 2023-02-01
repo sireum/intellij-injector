@@ -53,6 +53,14 @@ object EnumInjector {
 
         r :+= s"final def byOrdinal(ordinal: $sireumPkg.Z): $sireumPkg.Option[$name.Type] = ???"
 
+        r :+= s"final def random: $name.Type = ???"
+
+        r :+= s"final def randomSeed(seed: $sireumPkg.Z): $name.Type = ???"
+
+        r :+= s"final def randomBetween(min: $name.Type, max: $name.Type): $name.Type = ???"
+
+        r :+= s"final def randomSeedBetween(seed: $sireumPkg.Z, min: $name.Type, max: $name.Type): $name.Type = ???"
+
       case Mode.Inners =>
         r :+=
           s"""sealed trait Type extends $scalaPkg.Ordered[Type] {

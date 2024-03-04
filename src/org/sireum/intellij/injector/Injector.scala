@@ -25,7 +25,7 @@
 
 package org.sireum.intellij.injector
 
-import com.intellij.psi.{PsiAnnotation, PsiElement}
+import com.intellij.psi.{PsiAnnotation, PsiElement, PsiTypeParameter}
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScPrimaryConstructor
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScExpression
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScValueOrVariable, ScVariable, ScVariableDeclaration, ScVariableDefinition}
@@ -433,6 +433,24 @@ class Injector extends SyntheticMembersInjector {
           }
         }
         source.fakeCompanionClassOrCompanionClass match {
+          case c: ScTrait =>
+            for (a <- c.getAnnotations) {
+              getAnnotationName(a) match {
+                case "datatype" | "record" | "sig" | "msig" =>
+                  val name = c.getName
+                  val tparams = Option(c.getTypeParameterList) match {
+                    case Some(tpl) => tpl.getTypeParameters
+                    case _         => Array[PsiTypeParameter]()
+                  }
+                  val targs = for (tp <- tparams) yield tp.getName
+                  val typeArgs = if (targs.nonEmpty) s"[${targs.mkString(", ")}]" else ""
+                  val tpe = if (targs.nonEmpty) s"$name$typeArgs" else name
+                  val typeParams =
+                    if (targs.nonEmpty) s"[${tparams.map(_.getText).mkString(", ")}]" else ""
+                  return Vector(s"def $$$typeParams: $tpe = ???")
+                case _ =>
+              }
+            }
           case c: ScClass =>
             for (a <- c.getAnnotations) {
               getAnnotationName(a) match {

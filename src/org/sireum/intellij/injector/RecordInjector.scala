@@ -61,6 +61,8 @@ object RecordInjector {
 
         r :+= s"def apply$typeParams(${ps.mkString(", ")}): $tpe = ???"
 
+        r +:= s"def $$$typeParams: $tpe = ???"
+
         r :+= s"implicit def toGetter$typeParams(o: $tpe): $name.Getter$typeArgs = ???"
 
         {

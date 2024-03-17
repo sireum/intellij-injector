@@ -447,7 +447,7 @@ class Injector extends SyntheticMembersInjector {
                   val tpe = if (targs.nonEmpty) s"$name$typeArgs" else name
                   val typeParams =
                     if (targs.nonEmpty) s"[${tparams.map(_.getText).mkString(", ")}]" else ""
-                  return Vector(s"def $$$typeParams: $tpe = ???")
+                  return Vector(s"def $$$$$typeParams: $tpe = ???")
                 case _ =>
               }
             }

@@ -35,7 +35,7 @@
         This plugin provides an IntelliJ Scala language injector for the Sireum programming language (Slang).
     ]]></description>
 
-  <idea-version since-build="231.8109.175"/>
+  <idea-version since-build="241.14494.240"/>
   <depends>org.intellij.scala</depends>
 
   <depends>com.intellij.modules.lang</depends>
